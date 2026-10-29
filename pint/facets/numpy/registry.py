@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pathlib
 from types import NotImplementedType
-from typing import TYPE_CHECKING, Iterable, Literal, overload, override
+from typing import TYPE_CHECKING, Iterable, overload, override
 
 from ...compat import (
     HAS_NUMPY,
@@ -67,25 +67,30 @@ class GenericNumpyRegistry[QuantityT: NumpyQuantity, UnitT: NumpyUnit](
         self.force_ndarray = force_ndarray
         self.force_ndarray_like = force_ndarray_like
 
+    def _into_ndarray(
+        self,
+        value: Magnitude,
+        /,
+        *,
+        dtype: np.dtype | None = None,
+        copy: bool | None = None,
+    ) -> np.ndarray:
+        """Convert the given value into a ndarray."""
+        if not HAS_NUMPY:
+            raise ValueError("Cannot force to ndarray when NumPy is not present.")
+        return np.asarray(value, dtype=dtype, copy=copy)
+
     @overload
-    def _into_ndarray_like(
-        self, value: Magnitude, /, *, force_ndarray: Literal[True]
-    ) -> np.ndarray: ...
+    def _into_ndarray_like(self, value: Magnitude, /) -> np.ndarray: ...
     @overload
-    def _into_ndarray_like(
-        self, value: Magnitude, /, *, force_ndarray: bool | None = None
-    ) -> Magnitude: ...
-    def _into_ndarray_like(
-        self, value: Magnitude, /, *, force_ndarray: bool | None = None
-    ) -> Magnitude:
+    def _into_ndarray_like(self, value: Magnitude, /) -> Magnitude: ...
+    def _into_ndarray_like(self, value: Magnitude, /) -> Magnitude:
         """Convert the given value into a ndarray-like (or ndarray, if either `force_ndarray` or `self.force_ndarray`)."""
         if not HAS_NUMPY:
             raise ValueError(
                 "Cannot force to ndarray or ndarray-like when NumPy is not present."
             )
-        if force_ndarray is None:
-            force_ndarray = self.force_ndarray
-        if force_ndarray or not is_duck_array(value):
+        if self.force_ndarray or not is_duck_array(value):
             return np.asarray(value)
         return value
 

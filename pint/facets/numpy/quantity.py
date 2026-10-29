@@ -212,14 +212,16 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
 
         return value
 
-    def __array__(self, t=None) -> np.ndarray:
+    def __array__(
+        self, dtype: np.dtype | None = None, /, *, copy: bool | None = None
+    ) -> np.ndarray:
         if HAS_NUMPY and isinstance(self._magnitude, np.ndarray):
             warnings.warn(
                 "The unit of the quantity is stripped when downcasting to ndarray.",
                 UnitStrippedWarning,
                 stacklevel=2,
             )
-        return self._REGISTRY._into_ndarray_like(self._magnitude, force_ndarray=True)
+        return self._REGISTRY._into_ndarray(self._magnitude, dtype=dtype, copy=copy)
 
     def clip(self, min=None, max=None, out=None, **kwargs):
         if min is not None:
