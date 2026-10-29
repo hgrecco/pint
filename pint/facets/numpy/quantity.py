@@ -128,14 +128,14 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
 
         Parameters
         ----------
-        seq : sequence of pint.PlainQuantity
-            sequence of pint.PlainQuantity
-        units : UnitsContainer, str or pint.PlainQuantity
+        seq : sequence of pint.NumpyQuantity
+            sequence of pint.NumpyQuantity
+        units : UnitsContainer, str or pint.NumpyQuantity
             units of the physical quantity to be created (Default value = None)
 
         Returns
         -------
-        pint.PlainQuantity
+        pint.NumpyQuantity
         """
 
         len_seq = len(seq)
