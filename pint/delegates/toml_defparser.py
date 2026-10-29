@@ -69,163 +69,7 @@ from .base_defparser import ParserConfig
 FORMAT_VERSION = "1.0"
 
 
-def _number(value: Any, cfg: ParserConfig):
-    # floats arrive as their source text (parse_float=str), keeping all digits
-    return cfg.to_number(str(value))
-
-
-def _prefix(name: str, d: dict[str, Any], cfg: ParserConfig):
-    return definitions.PrefixDefinition(
-        name,
-        _number(d["value"], cfg),
-        d.get("symbol"),
-        tuple(d.get("aliases", ())),
-    )
-
-
-def _unit(name: str, d: dict[str, Any], cfg: ParserConfig):
-    modifiers = {
-        key: _number(d[key], cfg)
-        for key in ("offset", "logbase", "logfactor")
-        if key in d
-    }
-    scaled = cfg.to_scaled_units_container(str(d["value"]))
-    return definitions.UnitDefinition(
-        name,
-        d.get("symbol"),
-        tuple(d.get("aliases", ())),
-        Converter.from_arguments(scale=scaled.scale, **modifiers),
-        definitions.UnitsContainer(scaled),
-    )
-
-
-def _dimension(name: str, d: dict[str, Any], cfg: ParserConfig):
-    return definitions.DerivedDimensionDefinition(
-        f"[{name}]", cfg.to_dimension_container(d["value"])
-    )
-
-
-def _group(d: dict[str, Any], cfg: ParserConfig):
-    return GroupDefinition(
-        d["name"],
-        tuple(d.get("using_group_names", ())),
-        tuple(_unit(k, v, cfg) for k, v in d.get("definitions", {}).items()),
-    )
-
-
-def _system(d: dict[str, Any], cfg: ParserConfig):
-    rules = tuple(
-        BaseUnitRule(*(p.strip() for p in rule.split(":")))
-        for rule in d.get("rules", ())
-    )
-    return SystemDefinition(d["name"], tuple(d.get("using_group_names", ())), rules)
-
-
-def _relation(text: str, cfg: ParserConfig):
-    """Parse a context relation, e.g. ``"[length] <-> [frequency]: c / value"``."""
-    dimensions, equation = text.split(":", 1)
-    arrow = "<->" if "<->" in dimensions else "->"
-    source, destination = dimensions.split(arrow)
-    source = cfg.to_dimension_container(source)
-    destination = cfg.to_dimension_container(destination)
-    if arrow == "<->":
-        return BidirectionalRelation(source, destination, equation.strip())
-    return ForwardRelation(source, destination, equation.strip())
-
-
-def _context(d: dict[str, Any], cfg: ParserConfig):
-    return ContextDefinition(
-        d["name"],
-        tuple(d.get("aliases", ())),
-        {k: _number(v, cfg) for k, v in d.get("defaults", {}).items()},
-        tuple(_relation(r, cfg) for r in d.get("relations", ())),
-        tuple(_unit(k, v, cfg) for k, v in d.get("redefinitions", {}).items()),
-    )
-
-
 _ERRORS = (PintError, definitions.NotNumeric, ValueError, TypeError, KeyError)
-
-
-def _parse_entry(where: str, parser_function, *args):
-    """Parse one entry, reporting errors as a syntax error naming the entry.
-
-    Parameters
-    ----------
-    where :
-        label of the entry for error messages, e.g. ``"[unit] meter"``.
-    parser_function :
-        entry parser, e.g. ``_unit``, that returns a definition.
-    *args :
-        arguments for ``parser_function``: ``(name, d, cfg)`` for prefixes,
-        dimensions and units, ``(d, cfg)`` for groups, systems and contexts.
-    """
-    try:
-        return parser_function(*args)
-    except _ERRORS as ex:
-        raise DefinitionSyntaxError(f"in {where}: {ex}") from ex
-
-
-def _defaults(data: dict[str, Any]) -> list:
-    if "defaults" not in data:
-        return []
-    d = data["defaults"]
-    return [definitions.DefaultsDefinition(d.get("group"), d.get("system"))]
-
-
-def _prefixes(data: dict[str, Any], cfg: ParserConfig) -> list:
-    return [
-        _parse_entry(f"[prefix] {name}", _prefix, name, d, cfg)
-        for name, d in data.get("prefix", {}).items()
-    ]
-
-
-def _dimensions(data: dict[str, Any], cfg: ParserConfig) -> list:
-    return [
-        _parse_entry(f"[dimension] {name}", _dimension, name, d, cfg)
-        for name, d in data.get("dimension", {}).items()
-    ]
-
-
-def _units(data: dict[str, Any], cfg: ParserConfig) -> list:
-    return [
-        _parse_entry(f"[unit] {name}", _unit, name, d, cfg)
-        for name, d in data.get("unit", {}).items()
-    ]
-
-
-def _groups(data: dict[str, Any], cfg: ParserConfig) -> list:
-    return [
-        _parse_entry(f"[[group]] {d.get('name')}", _group, d, cfg)
-        for d in data.get("group", [])
-    ]
-
-
-def _systems(data: dict[str, Any], cfg: ParserConfig) -> list:
-    return [
-        _parse_entry(f"[[system]] {d.get('name')}", _system, d, cfg)
-        for d in data.get("system", [])
-    ]
-
-
-def _contexts(data: dict[str, Any], cfg: ParserConfig) -> list:
-    return [
-        _parse_entry(f"[[context]] {d.get('name')}", _context, d, cfg)
-        for d in data.get("context", [])
-    ]
-
-
-def _check_version(data: dict[str, Any]) -> None:
-    version = data.get("version")
-    if version is None:
-        raise DefinitionSyntaxError(
-            f'missing the definitions format version; add version = "{FORMAT_VERSION}" '
-            "at the top of the file, before any [section]"
-        )
-    if str(version).split(".")[0] != FORMAT_VERSION.split(".")[0]:
-        raise DefinitionSyntaxError(
-            f"unsupported version {version}; this Pint reads version {FORMAT_VERSION}"
-        )
-
 
 _KEYS = {
     "version",
@@ -240,6 +84,12 @@ _KEYS = {
 
 
 class TomlParser:
+    """Parser for TOML definition files.
+
+    ``load_*`` methods read a whole section of the file, and ``parse_*``
+    methods read one entry of a section.
+    """
+
     def __init__(self, default_config: ParserConfig):
         self._default_config = default_config
 
@@ -267,22 +117,165 @@ class TomlParser:
         """
         with open(filename, "rb") as f:
             data = tomllib.load(f, parse_float=str)
-        cfg = self._default_config
         try:
-            _check_version(data)
+            self._check_version(data)
             unknown = set(data) - _KEYS
             if unknown:
                 raise DefinitionSyntaxError(
                     f"unknown sections {', '.join(sorted(unknown))}"
                 )
             return [
-                *_defaults(data),
-                *_prefixes(data, cfg),
-                *_dimensions(data, cfg),
-                *_units(data, cfg),
-                *_groups(data, cfg),
-                *_systems(data, cfg),
-                *_contexts(data, cfg),
+                *self.load_defaults(data),
+                *self.load_prefixes(data),
+                *self.load_dimensions(data),
+                *self.load_units(data),
+                *self.load_groups(data),
+                *self.load_systems(data),
+                *self.load_contexts(data),
             ]
         except DefinitionSyntaxError as ex:
             raise DefinitionSyntaxError(f"{filename}: {ex}") from ex
+
+    @staticmethod
+    def _check_version(data: dict[str, Any]) -> None:
+        version = data.get("version")
+        if version is None:
+            raise DefinitionSyntaxError(
+                f'missing the definitions format version; add version = "{FORMAT_VERSION}" '
+                "at the top of the file, before any [section]"
+            )
+        if str(version).split(".")[0] != FORMAT_VERSION.split(".")[0]:
+            raise DefinitionSyntaxError(
+                f"unsupported version {version}; this Pint reads version {FORMAT_VERSION}"
+            )
+
+    @staticmethod
+    def _parse_entry(where: str, parser_function, *args):
+        """Parse one entry, reporting errors as a syntax error naming the entry.
+
+        Parameters
+        ----------
+        where :
+            label of the entry for error messages, e.g. ``"[unit] meter"``.
+        parser_function :
+            entry parser, e.g. ``self.parse_unit``, that returns a definition.
+        *args :
+            arguments for ``parser_function``: ``(name, d)`` for prefixes,
+            dimensions and units, ``(d,)`` for groups, systems and contexts.
+        """
+        try:
+            return parser_function(*args)
+        except _ERRORS as ex:
+            raise DefinitionSyntaxError(f"in {where}: {ex}") from ex
+
+    # Sections
+
+    def load_defaults(self, data: dict[str, Any]) -> list:
+        if "defaults" not in data:
+            return []
+        d = data["defaults"]
+        return [definitions.DefaultsDefinition(d.get("group"), d.get("system"))]
+
+    def load_prefixes(self, data: dict[str, Any]) -> list:
+        return [
+            self._parse_entry(f"[prefix] {name}", self.parse_prefix, name, d)
+            for name, d in data.get("prefix", {}).items()
+        ]
+
+    def load_dimensions(self, data: dict[str, Any]) -> list:
+        return [
+            self._parse_entry(f"[dimension] {name}", self.parse_dimension, name, d)
+            for name, d in data.get("dimension", {}).items()
+        ]
+
+    def load_units(self, data: dict[str, Any]) -> list:
+        return [
+            self._parse_entry(f"[unit] {name}", self.parse_unit, name, d)
+            for name, d in data.get("unit", {}).items()
+        ]
+
+    def load_groups(self, data: dict[str, Any]) -> list:
+        return [
+            self._parse_entry(f"[[group]] {d.get('name')}", self.parse_group, d)
+            for d in data.get("group", [])
+        ]
+
+    def load_systems(self, data: dict[str, Any]) -> list:
+        return [
+            self._parse_entry(f"[[system]] {d.get('name')}", self.parse_system, d)
+            for d in data.get("system", [])
+        ]
+
+    def load_contexts(self, data: dict[str, Any]) -> list:
+        return [
+            self._parse_entry(f"[[context]] {d.get('name')}", self.parse_context, d)
+            for d in data.get("context", [])
+        ]
+
+    # Entries
+
+    def _number(self, value: Any):
+        # floats arrive as their source text (parse_float=str), keeping all digits
+        return self._default_config.to_number(str(value))
+
+    def parse_prefix(self, name: str, d: dict[str, Any]):
+        return definitions.PrefixDefinition(
+            name,
+            self._number(d["value"]),
+            d.get("symbol"),
+            tuple(d.get("aliases", ())),
+        )
+
+    def parse_dimension(self, name: str, d: dict[str, Any]):
+        return definitions.DerivedDimensionDefinition(
+            f"[{name}]", self._default_config.to_dimension_container(d["value"])
+        )
+
+    def parse_unit(self, name: str, d: dict[str, Any]):
+        modifiers = {
+            key: self._number(d[key])
+            for key in ("offset", "logbase", "logfactor")
+            if key in d
+        }
+        scaled = self._default_config.to_scaled_units_container(str(d["value"]))
+        return definitions.UnitDefinition(
+            name,
+            d.get("symbol"),
+            tuple(d.get("aliases", ())),
+            Converter.from_arguments(scale=scaled.scale, **modifiers),
+            definitions.UnitsContainer(scaled),
+        )
+
+    def parse_group(self, d: dict[str, Any]):
+        return GroupDefinition(
+            d["name"],
+            tuple(d.get("using_group_names", ())),
+            tuple(self.parse_unit(k, v) for k, v in d.get("definitions", {}).items()),
+        )
+
+    def parse_system(self, d: dict[str, Any]):
+        rules = tuple(
+            BaseUnitRule(*(p.strip() for p in rule.split(":")))
+            for rule in d.get("rules", ())
+        )
+        return SystemDefinition(d["name"], tuple(d.get("using_group_names", ())), rules)
+
+    def parse_relation(self, text: str):
+        """Parse a context relation, e.g. ``"[length] <-> [frequency]: c / value"``."""
+        dimensions, equation = text.split(":", 1)
+        arrow = "<->" if "<->" in dimensions else "->"
+        source, destination = dimensions.split(arrow)
+        source = self._default_config.to_dimension_container(source)
+        destination = self._default_config.to_dimension_container(destination)
+        if arrow == "<->":
+            return BidirectionalRelation(source, destination, equation.strip())
+        return ForwardRelation(source, destination, equation.strip())
+
+    def parse_context(self, d: dict[str, Any]):
+        return ContextDefinition(
+            d["name"],
+            tuple(d.get("aliases", ())),
+            {k: self._number(v) for k, v in d.get("defaults", {}).items()},
+            tuple(self.parse_relation(r) for r in d.get("relations", ())),
+            tuple(self.parse_unit(k, v) for k, v in d.get("redefinitions", {}).items()),
+        )
