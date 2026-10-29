@@ -123,7 +123,7 @@ def is_upcast_type(cls: type) -> bool:
 def is_duck_array(obj: object) -> TypeIs[Array]:
     """Check if an object represents a (non-Quantity) duck array."""
     # TODO (NEP 30): replace duck array check with hasattr(other, "__duckarray__")
-    return isinstance(obj, ndarray) or (
+    return (HAS_NUMPY and isinstance(obj, ndarray)) or (
         not hasattr(obj, "_magnitude")
         and not hasattr(obj, "_units")
         and hasattr(obj, "__array_function__")
@@ -133,6 +133,7 @@ def is_duck_array(obj: object) -> TypeIs[Array]:
 
 
 def is_array_or_duck(obj: object) -> TypeIs[Array]:
+    """Check if an object represents a (non-Quantity) array, or duck array."""
     # TODO (NEP 30): replace duck array check with hasattr(other, "__duckarray__")
     return hasattr(obj, "__array_namespace__") or (
         not hasattr(obj, "_magnitude")
@@ -144,6 +145,7 @@ def is_array_or_duck(obj: object) -> TypeIs[Array]:
 
 
 def array_namespace(array: Array, /) -> ArrayAPIModule:
+    """Find the array namespace for the given array or duck array (default: `numpy`)."""
     if hasattr(array, "__array_namespace__"):
         return array.__array_namespace__()  # pyright: ignore[reportReturnType]
     # backwards-compatible duck array support
@@ -207,7 +209,7 @@ def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
         Always return False for non-numeric types.
     """
     # arrays
-    if is_duck_array(obj):
+    if is_array_or_duck(obj):
         xp = array_namespace(obj)
         if xp.isdtype(obj.dtype, "numeric"):
             out = xp.isnan(obj)
