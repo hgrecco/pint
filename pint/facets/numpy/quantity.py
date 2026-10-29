@@ -99,7 +99,7 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
         Parameters
         ----------
         quant_list : list of pint.NumpyQuantity
-            list of pint.PlainQuantity
+            list of pint.NumpyQuantity
         units : UnitsContainer, str or pint.NumpyQuantity
             units of the physical quantity to be created (Default value = None)
 
