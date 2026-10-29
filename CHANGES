@@ -5,7 +5,6 @@ Pint Changelog
 -------------------
 
 - Reject more clearly-nonsensical builtin magnitude types, such as `datetime.datetime` and `datetime.timedelta`, and improve some related error messages (#2523, #2533)
-- Add an opt-out flag for allowing unknown types in the `Quantity` constructor (`allow_unknown_magnitude_types`, default `True`) (#2523, #2533)
 - Improve the reliability of `**` on `Quantity`, making the implementation consistent with `*` and `/` (#2523)
 - Fix redefining a unit with `define()` or `load_definitions()` after it was used, which kept the old cached conversion; pass `rebuild_cache=False` to delay the rebuild (#922, #740)
 - Remove the `slpm` abbreviation for `standard_liter_per_minute` (#1354)
