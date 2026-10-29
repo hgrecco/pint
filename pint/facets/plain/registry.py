@@ -1530,19 +1530,36 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         """Convenience method that converts the argument into units.
 
         Intended for use by the `Unit` and `Quantity` constructors.
+
+        This function's return value is guaranteed to only contain units that are registered in `self`.
         """
         if units is None:
             return self.UnitsContainer()
-        if isinstance(units, (UnitsContainer, UnitDefinition)):
+        elif isinstance(units, PlainUnit):
+            if units._REGISTRY is not self:
+                raise ValueError(
+                    "Pint explicitly disallows mixing units from different registries, "
+                    "because they are not guaranteed to have the same meaning."
+                )
+            # NOTE: since it's a PlainUnit invariant, we know these units are valid for this registry,
+            #   so we can return them as-is without further validation.
+            return units._units
+        elif isinstance(units, UnitsContainer):
+            for u in units:
+                # this will raise `UndefinedUnitError` if the unit is not defined here
+                self.parse_units_as_container(u)
             return units
         elif isinstance(units, str):
-            return self.parse_units(units)._units
-        elif isinstance(units, PlainUnit):
-            return units._units
+            return self.parse_units_as_container(units)
         elif isinstance(units, PlainQuantity):
+            if units._REGISTRY is not self:
+                raise ValueError(
+                    "Pint explicitly disallows mixing units from different registries, "
+                    "because they are not guaranteed to have the same meaning."
+                )
             if units.magnitude != 1:
                 logger.warning(
-                    "Treating a non-unity quantity as units: the magnitude has been ignored!"
+                    "Treating a non-unity quantity as pure units: the magnitude has been ignored!"
                     # specialized warning message for maintaining backwards compatibility
                     if target_class_name is None
                     else f"Creating new {target_class_name} using a non unity PlainQuantity as units."

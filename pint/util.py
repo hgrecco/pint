@@ -623,7 +623,7 @@ class UnitsContainer(Mapping[str, Scalar]):
 
         return format_unit(self, spec, registry=registry, **kwspec)
 
-    def __copy__(self):
+    def __copy__(self, /) -> Self:
         # Skip expensive health checks performed by __init__
         out = object.__new__(self.__class__)
         out._d = self._d.copy()
@@ -632,7 +632,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         out._one = self._one
         return out
 
-    def __mul__(self, other: Any):
+    def __mul__(self, other: Self, /) -> Self:
         if not isinstance(other, self.__class__):
             err = "Cannot multiply UnitsContainer by {}"
             raise TypeError(err.format(type(other)))
@@ -659,7 +659,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         new._hash = None
         return new
 
-    def __truediv__(self, other: Any):
+    def __truediv__(self, other: Self, /) -> Self:
         if not isinstance(other, self.__class__):
             err = "Cannot divide UnitsContainer by {}"
             raise TypeError(err.format(type(other)))
@@ -673,7 +673,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         new._hash = None
         return new
 
-    def __rtruediv__(self, other: Any):
+    def __rtruediv__(self, other):
         if not isinstance(other, self.__class__) and other != 1:
             err = "Cannot divide {} by UnitsContainer"
             raise TypeError(err.format(type(other)))
