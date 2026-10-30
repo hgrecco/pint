@@ -360,12 +360,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
     def _register_adder[T](
         self,
         definition_class: type[T],
-        adder_func: Callable[
-            [
-                T,
-            ],
-            None,
-        ],
+        adder_func: Callable[[T], None],
     ) -> None:
         """Register a block definition."""
         self._adders[definition_class] = adder_func
@@ -379,20 +374,20 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         self._register_adder(DimensionDefinition, self._add_dimension)
         self._register_adder(DerivedDimensionDefinition, self._add_derived_dimension)
 
-    def __deepcopy__(self, memo) -> type[Self]:
+    def __deepcopy__(self, memo: dict[int, Any] | None = None) -> Self:
         new = object.__new__(type(self))
         new.__dict__ = copy.deepcopy(self.__dict__, memo)
         new._init_dynamic_classes()
         return new
 
-    def __getattr__(self, item: str) -> UnitT:
+    def __getattr__(self, item: str, /) -> UnitT:
         getattr_maybe_raise(self, item)
 
         # self.Unit will call parse_units
         return self.Unit(item)
 
-    def __contains__(self, item: str | UnitT) -> bool:
-        """Support checking prefixed units with the `in` operator"""
+    def __contains__(self, item: str | UnitT, /) -> bool:
+        """Support checking prefixed units with the `in` operator."""
         if isinstance(item, self.Unit):
             item = str(item)
         try:
@@ -401,12 +396,12 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         except UndefinedUnitError:
             return False
 
-    def __dir__(self) -> list[str]:
+    def __dir__(self, /) -> list[str]:
         #: Calling dir(registry) gives all units, methods, and attributes.
         #: Also used for autocompletion in IPython.
         return list(self._units.keys()) + list(object.__dir__(self))
 
-    def __iter__(self) -> Iterator[str]:
+    def __iter__(self, /) -> Iterator[str]:
         """Allows for listing all units in registry with `list(ureg)`.
 
         Returns
@@ -416,7 +411,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         return iter(sorted(self._units.keys()))
 
     @property
-    def cache_folder(self) -> pathlib.Path | None:
+    def cache_folder(self, /) -> pathlib.Path | None:
         if self._diskcache:
             return self._diskcache.cache_folder
         return None
