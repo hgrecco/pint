@@ -4,6 +4,11 @@ pint.compat
 
 Compatibility layer.
 
+Array detection/support functions try the APIs in the following order:
+- Array API standard (experimental)
+- Duck arrays (e.g. dask/pandas; partial support)
+- NumPy ndarray (full support)
+
 :copyright: 2013 by Pint Authors, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
@@ -19,13 +24,18 @@ from importlib.util import find_spec
 from numbers import Number
 from typing import (
     Any,
+    Literal,
     # Remove once all dependent packages change their imports.
     NoReturn,
     TypeAlias,  # noqa
     Unpack,  # noqa
+    overload,
 )
 
 from typing_extensions import TypeIs, deprecated  # noqa
+
+from ._array_typing import ArrayAPIModule
+from ._typing import Array
 
 
 def coerce_scalar(value, scalar):
@@ -105,24 +115,71 @@ def is_upcast_type(cls: type) -> bool:
         return cls is real_cls or cls == real_cls
 
 
-def is_duck_array_type(cls: type) -> bool:
-    """Check if the type object represents a (non-Quantity) duck array type."""
+#######
+# Array support
+#######
+
+
+def is_duck_array(obj: object, /) -> TypeIs[Array]:
+    """Check if an object represents a (non-Quantity) duck array."""
     # TODO (NEP 30): replace duck array check with hasattr(other, "__duckarray__")
-    return issubclass(cls, ndarray) or (
-        not hasattr(cls, "_magnitude")
-        and not hasattr(cls, "_units")
-        and hasattr(cls, "__array_function__")
-        and hasattr(cls, "ndim")
-        and hasattr(cls, "dtype")
+    return (HAS_NUMPY and isinstance(obj, ndarray)) or (
+        # make sure it's not quantity-like
+        not hasattr(obj, "_magnitude")
+        and not hasattr(obj, "_units")
+        # important array attributes
+        and hasattr(obj, "ndim")
+        and hasattr(obj, "dtype")
+        and (
+            # duck arrays
+            hasattr(obj, "__array_function__")
+            # scipy sparse
+            or (hasattr(obj, "__array_priority__") and hasattr(obj, "shape"))
+        )
     )
 
 
-def is_duck_array(obj: object) -> TypeIs[np.typing.ArrayLike]:
-    """Check if an object represents a (non-Quantity) duck array type."""
-    return is_duck_array_type(type(obj))
+def is_array_or_duck(obj: object, /) -> TypeIs[Array]:
+    """Check if an object represents a (non-Quantity) array, or duck array."""
+    # TODO (NEP 30): replace duck array check with hasattr(other, "__duckarray__")
+    return hasattr(obj, "__array_namespace__") or (
+        # make sure it's not quantity-like
+        not hasattr(obj, "_magnitude")
+        and not hasattr(obj, "_units")
+        # important array attributes
+        and hasattr(obj, "ndim")
+        and hasattr(obj, "dtype")
+        and (
+            # duck arrays
+            hasattr(obj, "__array_function__")
+            # scipy sparse
+            or (hasattr(obj, "__array_priority__") and hasattr(obj, "shape"))
+        )
+    )
 
 
-def eq(lhs: Any, rhs: Any, check_all: bool) -> bool | Iterable[bool]:
+def array_namespace(array: Array, /) -> ArrayAPIModule:
+    """Find the array namespace for the given array or duck array (default: `numpy`)."""
+    if hasattr(array, "__array_namespace__"):
+        return array.__array_namespace__()  # pyright: ignore[reportReturnType]
+    # backwards-compatible duck array support
+    elif HAS_NUMPY:
+        return numpy  # pyright: ignore[reportReturnType]
+    else:
+        raise TypeError("Pint only fully supports duck arrays if NumPy is available.")
+
+
+def array_size(array: Array, /) -> int:
+    if hasattr(array, "size"):
+        return array.size
+    return array_namespace(array).size(array)  # pyright: ignore[reportAttributeAccessIssue]
+
+
+@overload
+def eq(lhs: Any, rhs: Any, check_all: Literal[True]) -> "bool | np.bool": ...
+@overload
+def eq(lhs: Any, rhs: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]": ...
+def eq(lhs: Any, rhs: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]":
     """Comparison of scalars and arrays.
 
     Parameters
@@ -140,12 +197,16 @@ def eq(lhs: Any, rhs: Any, check_all: bool) -> bool | Iterable[bool]:
     bool or array_like of bool
     """
     out = lhs == rhs
-    if check_all and is_duck_array_type(type(out)):
-        return out.all()
+    if check_all and is_array_or_duck(out):
+        return array_namespace(out).all(out).item()
     return out
 
 
-def isnan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
+@overload
+def isnan(obj: Any, /, check_all: Literal[True]) -> "bool | np.bool": ...
+@overload
+def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]": ...
+def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
     """Test for NaN or NaT.
 
     Parameters
@@ -161,22 +222,25 @@ def isnan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
     bool or array_like of bool.
         Always return False for non-numeric types.
     """
-    if is_duck_array_type(type(obj)):
-        if obj.dtype.kind in "ifc":
-            out = np.isnan(obj)
-        elif obj.dtype.kind in "Mm":
-            out = np.isnat(obj)
+    # arrays
+    if is_array_or_duck(obj):
+        xp = array_namespace(obj)
+        if xp.isdtype(obj.dtype, "numeric"):
+            out = xp.isnan(obj)
+        elif getattr(obj.dtype, "kind", "?") in "Mm":  # numpy datetime or timedelta
+            out = xp.isnat(obj)  # pyright: ignore[reportAttributeAccessIssue]
         else:
             if HAS_UNCERTAINTIES:
                 try:
                     out = unp.isnan(obj)
                 except TypeError:
-                    # Not a numeric or UFloat type
-                    out = np.full(obj.shape, False)
+                    # Not a numeric, datetime or UFloat type
+                    out = xp.full(obj.shape, False)
             else:
                 # Not a numeric or datetime type
-                out = np.full(obj.shape, False)
-        return out.any() if check_all else out
+                out = xp.full(obj.shape, False)
+        return xp.any(out).item() if check_all else out
+    # scalars
     if isinstance(obj, np_datetime64):
         return np.isnat(obj)
     elif HAS_UNCERTAINTIES and isinstance(obj, UFloat):
@@ -187,7 +251,11 @@ def isnan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
         return False
 
 
-def zero_or_nan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
+@overload
+def zero_or_nan(obj: Any, /, check_all: Literal[True]) -> "bool | np.bool": ...
+@overload
+def zero_or_nan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]": ...
+def zero_or_nan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
     """Test if obj is zero, NaN, or NaT.
 
     Parameters
@@ -203,9 +271,9 @@ def zero_or_nan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
     bool or array_like of bool.
         Always return False for non-numeric types.
     """
-    out = eq(obj, 0, False) + isnan(obj, False)
-    if check_all and is_duck_array_type(type(out)):
-        return out.all()
+    out = (obj == 0) | isnan(obj, check_all=False)
+    if check_all and is_array_or_duck(out):
+        return array_namespace(out).all(out).item()
     return out
 
 

@@ -29,12 +29,11 @@ from typing import (
 
 from ..._typing import Magnitude, QuantityOrUnitLike, Scalar, UnitLike
 from ...compat import (
-    HAS_NUMPY,
+    array_namespace,
+    array_size,
     eq,
-    is_duck_array,
-    is_duck_array_type,
+    is_array_or_duck,
     is_upcast_type,
-    np,
     zero_or_nan,
 )
 from ...errors import DimensionalityError, OffsetUnitCalculusError, PintTypeError
@@ -48,6 +47,7 @@ from . import qto
 from .definitions import UnitDefinition
 
 if TYPE_CHECKING:
+    import numpy as np
     import optype as opt
     import optype.numpy as npt
     from optype import do_neg, do_pos, do_round
@@ -57,23 +57,10 @@ if TYPE_CHECKING:
     from .unit import PlainUnit as Unit
     from .unit import UnitsContainer as UnitsContainerT
 
-    if HAS_NUMPY:
-        import numpy as np  # noqa
-
 else:
     do_round = round
     do_pos = operator.pos
     do_neg = operator.neg
-
-try:
-    import uncertainties.unumpy as unp
-    from uncertainties import ufloat
-
-    HAS_UNCERTAINTIES = True
-except ImportError:
-    unp = np
-    ufloat = Ufloat = None
-    HAS_UNCERTAINTIES = False
 
 
 def ireduce_dimensions[X, **P, R: PlainQuantity | NotImplementedType](
@@ -161,14 +148,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             return 0
         return self.magnitude.ndim
 
-    @property
-    def force_ndarray(self) -> bool:
-        return self._REGISTRY.force_ndarray
-
-    @property
-    def force_ndarray_like(self) -> bool:
-        return self._REGISTRY.force_ndarray_like
-
     def __reduce__(
         self,
     ) -> tuple[
@@ -190,7 +169,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
     @overload
     def __new__(
-        cls, value: datetime.timedelta | np.timedelta64, units: UnitLike | None = None
+        cls, value: datetime.timedelta, units: UnitLike | None = None
     ) -> "PlainQuantity[float]": ...
     @overload
     def __new__(
@@ -372,81 +351,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         return self.dimensionality == self._REGISTRY.get_dimensionality(dimension)
 
     @classmethod
-    def from_list[T: np.floating | np.integer](
-        cls: type[PlainQuantity[opt.numpy.Array1D[np.float64]]],
-        quant_list: list[
-            PlainQuantity[np.floating]
-            | PlainQuantity[np.integer]
-            | PlainQuantity[float]
-            | PlainQuantity[int]
-        ],
-        units: UnitLike | None = None,
-    ) -> PlainQuantity[opt.numpy.Array1D[np.float64]]:
-        """Transforms a list of Quantities into an numpy.array quantity.
-        If no units are specified, the unit of the first element will be used.
-        Same as from_sequence.
-
-        If units is not specified and list is empty, the unit cannot be determined
-        and a ValueError is raised.
-
-        Parameters
-        ----------
-        quant_list : list of pint.PlainQuantity
-            list of pint.PlainQuantity
-        units : UnitsContainer, str or pint.PlainQuantity
-            units of the physical quantity to be created (Default value = None)
-
-        Returns
-        -------
-        pint.PlainQuantity
-        """
-        return cls.from_sequence(quant_list, units=units)
-
-    @classmethod
-    def from_sequence(
-        cls: type[PlainQuantity[opt.numpy.Array1D[np.float64]]],
-        seq: Sequence[
-            PlainQuantity[np.floating]
-            | PlainQuantity[np.integer]
-            | PlainQuantity[float]
-            | PlainQuantity[int]
-        ],
-        units: UnitLike | None = None,
-    ) -> PlainQuantity[opt.numpy.Array1D[np.float64]]:
-        """Transforms a sequence of Quantities into an numpy.array quantity.
-        If no units are specified, the unit of the first element will be used.
-
-        If units is not specified and sequence is empty, the unit cannot be determined
-        and a ValueError is raised.
-
-        Parameters
-        ----------
-        seq : sequence of pint.PlainQuantity
-            sequence of pint.PlainQuantity
-        units : UnitsContainer, str or pint.PlainQuantity
-            units of the physical quantity to be created (Default value = None)
-
-        Returns
-        -------
-        pint.PlainQuantity
-        """
-
-        len_seq = len(seq)
-        if units is None:
-            if len_seq:
-                units = seq[0].u
-            else:
-                raise ValueError("Cannot determine units from empty sequence!")
-
-        a = np.empty(len_seq)
-
-        for i, seq_i in enumerate(seq):
-            a[i] = seq_i.m_as(units)
-            # raises DimensionalityError if incompatible units are used in the sequence
-
-        return cls(a, units)
-
-    @classmethod
     def from_tuple(
         cls, tup: tuple[MagnitudeT_co, Iterable[tuple[str, Scalar]]]
     ) -> Self:
@@ -519,7 +423,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             self._magnitude,
             self._units,
             other,
-            inplace=is_duck_array_type(type(self._magnitude)),
+            inplace=is_array_or_duck(self._magnitude),
             **ctx_kwargs,
         )
 
@@ -927,7 +831,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     def __iadd__(self, other):
         if isinstance(other, datetime.datetime):
             return cast("PlainQuantity[int | float]", self).to_timedelta() + other
-        elif is_duck_array_type(type(self._magnitude)):
+        elif is_array_or_duck(self._magnitude):
             return self._iadd_sub(other, operator.iadd)
         return self._add_sub(other, operator.add)
 
@@ -939,7 +843,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     # PlainQuantity[float | array[float]] + timedelta -> PlainQuantity[float | array[float]]
     @overload
     def __add__[T: int | float | npt.ArrayND[np.floating]](
-        self: PlainQuantity[T], other: datetime.timedelta | np.timedelta64
+        self: PlainQuantity[T], other: datetime.timedelta
     ) -> PlainQuantity[T]: ...
     # General overloads (should work in most cases)
     @overload
@@ -968,7 +872,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     def __isub__[T: Magnitude, U: Magnitude](
         self: PlainQuantity[opt.CanISub[T, U]], other: PlainQuantity[T] | T
     ) -> PlainQuantity[U]:
-        if is_duck_array_type(type(self._magnitude)):
+        if is_array_or_duck(self._magnitude):
             return self._iadd_sub(other, operator.isub)
 
         return self._add_sub(other, operator.sub)
@@ -976,7 +880,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     # PlainQuantity[float | array[float]] - timedelta -> PlainQuantity[float | array[float]]
     @overload
     def __sub__[T: int | float | npt.ArrayND[np.floating]](
-        self: PlainQuantity[T], other: datetime.timedelta | np.timedelta64
+        self: PlainQuantity[T], other: datetime.timedelta
     ) -> PlainQuantity[T]: ...
     # General overloads (should work in most cases)
     @overload
@@ -1001,7 +905,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     # timedelta - PlainQuantity[float | array[float]] -> PlainQuantity[float | array[float]]
     @overload
     def __rsub__[T: int | float | npt.ArrayND[np.floating]](
-        self: PlainQuantity[T], other: datetime.timedelta | np.timedelta64
+        self: PlainQuantity[T], other: datetime.timedelta
     ) -> PlainQuantity[T]: ...
     # General overloads (should work in most cases)
     @overload
@@ -1197,7 +1101,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     def __imul__[T: Magnitude, U: Magnitude](
         self: PlainQuantity[opt.CanIMul[T, U]], other: PlainQuantity[T] | T
     ) -> PlainQuantity[U]:
-        if is_duck_array_type(type(self._magnitude)):
+        if is_array_or_duck(self._magnitude):
             return self._imul_div(other, operator.imul)
 
         return self._mul_div(other, operator.mul)
@@ -1205,7 +1109,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     # Quantity[float | array[float]] * timedelta -> Quantity[float | array[float]]
     @overload
     def __mul__[T: int | float | npt.ArrayND[np.floating]](
-        self: PlainQuantity[T], other: datetime.timedelta | np.timedelta64
+        self: PlainQuantity[T], other: datetime.timedelta
     ) -> PlainQuantity[T]: ...
     # General overloads (should work in most cases)
     @overload
@@ -1260,7 +1164,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     def __itruediv__[T: Magnitude, U: Magnitude](
         self: PlainQuantity[opt.CanITruediv[T, U]], other: PlainQuantity[T] | T
     ) -> PlainQuantity[U]:
-        if is_duck_array_type(type(self._magnitude)):
+        if is_array_or_duck(self._magnitude):
             return self._imul_div(other, operator.itruediv)
 
         return self._mul_div(other, operator.truediv)
@@ -1268,7 +1172,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     # PlainQuantity[float | array[float]] / timedelta -> PlainQuantity[float | array[float]]
     @overload
     def __truediv__[T: int | float | npt.ArrayND[np.floating]](
-        self: PlainQuantity[T], other: datetime.timedelta | np.timedelta64
+        self: PlainQuantity[T], other: datetime.timedelta
     ) -> PlainQuantity[T]: ...
     # General overloads
     @overload
@@ -1287,7 +1191,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     # timedelta / PlainQuantity[float | array[float]] -> PlainQuantity[float | array[float]]
     @overload
     def __rtruediv__[T: int | float | npt.ArrayND[np.floating]](
-        self: PlainQuantity[T], other: datetime.timedelta | np.timedelta64
+        self: PlainQuantity[T], other: datetime.timedelta
     ) -> PlainQuantity[T]: ...
     # General overloads
     @overload
@@ -1468,7 +1372,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     def __ipow__[T: Magnitude, U: Magnitude](
         self: PlainQuantity[opt.CanIPow[T, U]], other: PlainQuantity[T] | T
     ) -> PlainQuantity[U]:
-        if not is_duck_array_type(type(self._magnitude)):
+        if not is_array_or_duck(self._magnitude):
             return self.__pow__(other)
 
         # Normalize the exponent and ensure it is dimensionless
@@ -1482,7 +1386,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         if not self._ok_for_muldiv:
             raise OffsetUnitCalculusError(self._units)
         # Handle array exponents
-        if is_duck_array(other):
+        if is_array_or_duck(other):
             # arrays are refused as exponent, because they would create
             # len(array) quantities of len(set(array)) different units
             # unless the plain is dimensionless. Ensure dimensionless
@@ -1492,7 +1396,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
                 self._magnitude = self.m_as("") ** other
                 self._units = self.UnitsContainer()
                 return self
-            elif np.size(other) != 1:
+            if array_size(other) != 1:
                 raise DimensionalityError(
                     self._units,
                     "dimensionless",
@@ -1553,13 +1457,13 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         if not self._ok_for_muldiv:
             raise OffsetUnitCalculusError(self._units)
         # Handle array exponents
-        if is_duck_array(other):
+        if is_array_or_duck(other):
             # Note: this will strip Units of degrees or radians from PlainQuantity
             if self.dimensionless:
                 return self.__class__(
                     self._convert_magnitude_not_inplace(self.UnitsContainer()) ** other,
                 )
-            elif np.size(other) != 1:
+            elif array_size(other) != 1:
                 raise DimensionalityError(
                     self._units,
                     "dimensionless",
@@ -1642,14 +1546,15 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         def bool_result(value):
             nonlocal other
 
-            if not is_duck_array_type(type(self._magnitude)):
+            if not is_array_or_duck(self._magnitude):
                 return value
 
             if isinstance(other, PlainQuantity):
                 other = other._magnitude
 
-            template, _ = np.broadcast_arrays(self._magnitude, other)
-            return np.full_like(template, fill_value=value, dtype=np.bool_)
+            xp = array_namespace(self._magnitude)
+            template, _ = xp.broadcast_arrays(self._magnitude, other)
+            return xp.full_like(template, fill_value=value, dtype=xp.bool)
 
         # We compare to the plain class of PlainQuantity because
         # each PlainQuantity class is unique.
@@ -1699,8 +1604,10 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     @check_implemented
     def __ne__(self, other):
         out = self.__eq__(other)
-        if is_duck_array_type(type(out)):
-            return np.logical_not(out)
+        if is_array_or_duck(out):
+            # note: here we're using the namespace instead of `~` simply because duck arrays
+            #   are not guaranteed to implement `__invert__` with the same (Array API) semantics
+            return array_namespace(out).logical_not(out)
         return not out
 
     @check_implemented

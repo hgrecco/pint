@@ -5,17 +5,23 @@ pint.facets.numpy.quantity
 :copyright: 2022 by Pint Authors, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+# pyright: reportInvalidTypeArguments=warning
 
 from __future__ import annotations
 
 import functools
 import math
 import warnings
-from typing import Any
+from collections.abc import Iterator, Sequence
+from typing import TYPE_CHECKING, Any
 
-from ..._typing import Magnitude, Shape
+from ..._array_typing import HasShape, Shape
+from ..._typing import Magnitude
 from ...compat import (
     HAS_NUMPY,
+    array_namespace,
+    array_size,
+    is_array_or_duck,
     np,
 )
 from ...errors import (
@@ -48,6 +54,11 @@ except ImportError:
     ufloat = Ufloat = None
     HAS_UNCERTAINTIES = False
 
+if TYPE_CHECKING:
+    import optype as opt
+
+    from ..._typing import UnitLike
+
 
 def method_wraps(numpy_func):
     if isinstance(numpy_func, str):
@@ -63,6 +74,89 @@ def method_wraps(numpy_func):
 
 class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
     """ """
+
+    @property
+    def force_ndarray(self) -> bool:
+        return self._REGISTRY.force_ndarray
+
+    @property
+    def force_ndarray_like(self) -> bool:
+        return self._REGISTRY.force_ndarray_like
+
+    @classmethod
+    def from_list[T: np.floating | np.integer](
+        cls: type[NumpyQuantity[opt.numpy.Array1D[np.float64]]],
+        quant_list: list[
+            NumpyQuantity[np.floating]
+            | NumpyQuantity[np.integer]
+            | NumpyQuantity[float]
+            | NumpyQuantity[int]
+        ],
+        units: UnitLike | None = None,
+    ) -> NumpyQuantity[opt.numpy.Array1D[np.float64]]:
+        """Transforms a list of Quantities into an numpy.array quantity.
+        If no units are specified, the unit of the first element will be used.
+        Same as from_sequence.
+
+        If units is not specified and list is empty, the unit cannot be determined
+        and a ValueError is raised.
+
+        Parameters
+        ----------
+        quant_list : list of pint.NumpyQuantity
+            list of pint.NumpyQuantity
+        units : UnitsContainer, str or pint.NumpyQuantity
+            units of the physical quantity to be created (Default value = None)
+
+        Returns
+        -------
+        pint.NumpyQuantity
+        """
+        return cls.from_sequence(quant_list, units=units)
+
+    @classmethod
+    def from_sequence(
+        cls: type[NumpyQuantity[opt.numpy.Array1D[np.float64]]],
+        seq: Sequence[
+            NumpyQuantity[np.floating]
+            | NumpyQuantity[np.integer]
+            | NumpyQuantity[float]
+            | NumpyQuantity[int]
+        ],
+        units: UnitLike | None = None,
+    ) -> NumpyQuantity[opt.numpy.Array1D[np.float64]]:
+        """Transforms a sequence of Quantities into an numpy.array quantity.
+        If no units are specified, the unit of the first element will be used.
+
+        If units is not specified and sequence is empty, the unit cannot be determined
+        and a ValueError is raised.
+
+        Parameters
+        ----------
+        seq : sequence of pint.NumpyQuantity
+            sequence of pint.NumpyQuantity
+        units : UnitsContainer, str or pint.NumpyQuantity
+            units of the physical quantity to be created (Default value = None)
+
+        Returns
+        -------
+        pint.NumpyQuantity
+        """
+
+        len_seq = len(seq)
+        if units is None:
+            if len_seq:
+                units = seq[0].u
+            else:
+                raise ValueError("Cannot determine units from empty sequence!")
+
+        a = np.empty(len_seq)
+
+        for i, seq_i in enumerate(seq):
+            a[i] = seq_i.m_as(units)
+            # raises DimensionalityError if incompatible units are used in the sequence
+
+        return cls(a, units)
 
     # NumPy function/ufunc support
     __array_priority__ = 17
@@ -123,14 +217,16 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
 
         return value
 
-    def __array__(self, t=None) -> np.ndarray:
+    def __array__(
+        self, dtype: np.dtype | None = None, /, *, copy: bool | None = None
+    ) -> np.ndarray:
         if HAS_NUMPY and isinstance(self._magnitude, np.ndarray):
             warnings.warn(
                 "The unit of the quantity is stripped when downcasting to ndarray.",
                 UnitStrippedWarning,
                 stacklevel=2,
             )
-        return self._REGISTRY._into_ndarray_like(self._magnitude, force_ndarray=True)
+        return self._REGISTRY._into_ndarray(self._magnitude, dtype=dtype, copy=copy)
 
     def clip(self, min=None, max=None, out=None, **kwargs):
         if min is not None:
@@ -172,25 +268,28 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
         return self.__class__(self._magnitude.imag, self._units)
 
     @property
-    def T(self):
+    def T(self, /) -> NumpyQuantity:
         return self.__class__(self._magnitude.T, self._units)
 
     @property
-    def flat(self):
+    def flat(self, /) -> Iterator[NumpyQuantity]:
         for v in self._magnitude.flat:
             yield self.__class__(v, self._units)
 
     @property
-    def shape(self) -> Shape:
+    def shape[S: Shape](self: NumpyQuantity[HasShape[S]], /) -> S:
         return self._magnitude.shape
 
     @property
-    def dtype(self):
+    def dtype[DT: np.dtype[np.number]](
+        self: NumpyQuantity[opt.numpy.HasDType[DT]],
+        /,
+    ) -> DT:
         return self._magnitude.dtype
 
     @shape.setter
-    def shape(self, value):
-        self._magnitude.shape = value
+    def shape(self: NumpyQuantity[np.ndarray], shape: Shape, /) -> None:
+        self._magnitude.shape = shape
 
     def searchsorted(self, v, side="left", sorter=None):
         if isinstance(v, self.__class__):
@@ -346,7 +445,7 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
 
         Arrays are scaled to the smallest common prefix by default, set `maximumPrefix`
         to `True` to use the largest possible prefix instead.
-        Infinite and  `nan` values are ignored.
+        Infinite and `nan` values are ignored.
         To get output in terms of a different unit, use the unit parameter.
 
 
@@ -362,18 +461,20 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
         >>> ([1, 6000] * ureg("g")).to_compact(maximumPrefix=True)
         Quantity(array([1.e-03, 6.e+00]), "kilogram")
         """
-        if not (HAS_NUMPY and isinstance(self._magnitude, np.ndarray)):
-            # Not an array (e.g. numpy isn't installed, or the magnitude is a
-            # plain scalar/Decimal/etc.): maximumPrefix doesn't apply to a
-            # single value, so defer to the scalar implementation.
+        qm = self._magnitude
+
+        if not is_array_or_duck(qm):
+            # Not an array: maximumPrefix doesn't apply to a single value,
+            #   so defer to the scalar implementation instead.
             return super().to_compact(unit)
 
-        qm = self.magnitude
+        xp = array_namespace(qm)
+
         if (
             self.unitless
-            or np.all(qm == 0)
-            or np.all(np.isnan(qm))
-            or np.all(np.isinf(qm))
+            or xp.all(qm == 0).item()
+            or xp.all(xp.isnan(qm)).item()
+            or xp.all(xp.isinf(qm)).item()
         ):
             return self
 
@@ -386,18 +487,18 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
             magnitude = magnitude.nominal_value
 
         if unit_power > 0:
-            power = np.floor(np.log10(np.abs(magnitude)) / float(unit_power) / 3) * 3
+            power = xp.floor(xp.log10(xp.abs(magnitude)) / float(unit_power) / 3) * 3
         else:
-            power = np.ceil(np.log10(np.abs(magnitude)) / float(unit_power) / 3) * 3
+            power = xp.ceil(xp.log10(xp.abs(magnitude)) / float(unit_power) / 3) * 3
 
-        finite_powers = power[np.isfinite(power)]
-        if finite_powers.size == 0:
+        finite_powers = power[xp.isfinite(power)]
+        if array_size(finite_powers) == 0:
             # Only zeros, nan and inf: there is no prefix to pick.
             return self
         pivot = (
-            finite_powers[np.argmax(np.abs(finite_powers))]
+            finite_powers[xp.argmax(xp.abs(finite_powers))]
             if maximumPrefix
-            else (finite_powers[np.argmin(np.abs(finite_powers))])
+            else (finite_powers[xp.argmin(xp.abs(finite_powers))])
         )
 
         new_unit_container = _pick_compact_unit(

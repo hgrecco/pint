@@ -63,7 +63,7 @@ from ..._typing import (
     Scalar,
     UnitLike,
 )
-from ...compat import coerce_scalar, is_duck_array
+from ...compat import coerce_scalar, is_array_or_duck
 from ...errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
@@ -191,10 +191,6 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         path of the units definition file to load or line-iterable object.
         Empty string to load the default definition file. (default)
         None to leave the UnitRegistry empty.
-    force_ndarray : bool
-        convert any input, scalar or not to a numpy.ndarray.
-    force_ndarray_like : bool
-        convert all inputs other than duck arrays to a numpy.ndarray.
     on_redefinition : str
         action to take in case a unit is redefined: 'warn', 'raise', 'ignore'
     auto_reduce_dimensions :
@@ -229,8 +225,6 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         self,
         filename: Iterable[str] | str | pathlib.Path | None = "",
         *,
-        force_ndarray: bool = False,
-        force_ndarray_like: bool = False,
         on_redefinition: str = "warn",
         auto_reduce_dimensions: bool = False,
         autoconvert_to_preferred: bool = False,
@@ -266,8 +260,6 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 
         self.formatter = delegates.Formatter(self)
         self._filename = filename
-        self.force_ndarray = force_ndarray
-        self.force_ndarray_like = force_ndarray_like
         self.preprocessors = preprocessors or []
         # use a default preprocessor to support "%"
         self.preprocessors.insert(0, lambda string: string.replace("%", " percent "))
@@ -1615,7 +1607,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 "Pint does not support boolean magnitudes because they are confusing: "
                 "please call `int()` or `float()` before interpreting the value as a magnitude."
             )
-        elif isinstance(value, Number) or is_duck_array(value):
+        elif isinstance(value, Number) or is_array_or_duck(value):
             return cast(Magnitude, value)
         # handle clearly meaningless or unintended values
         elif isinstance(value, (dict, set, datetime.datetime, datetime.timedelta)):
