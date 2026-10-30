@@ -1358,7 +1358,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             value = units[name]
             if not cname:
                 continue
-            if as_delta and (many or (not many and value != 1)):
+            if as_delta and (many or value != 1):
                 definition = self._units[cname]
                 # Logarithmic units have no delta counterpart.
                 if not (definition.is_multiplicative or definition.is_logarithmic):
@@ -1547,7 +1547,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         elif isinstance(units, UnitsContainer):
             for u in units:
                 # this will raise `UndefinedUnitError` if the unit is not defined here
-                self.parse_units_as_container(u)
+                self.get_name(u)
             return units
         elif isinstance(units, str):
             return self.parse_units_as_container(units)
