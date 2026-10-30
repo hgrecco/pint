@@ -386,15 +386,26 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         # self.Unit will call parse_units
         return self.Unit(item)
 
-    def __contains__(self, item: str | UnitT, /) -> bool:
+    def __contains__(self, item: str | UnitsContainer | UnitT, /) -> bool:
         """Support checking prefixed units with the `in` operator."""
-        if isinstance(item, self.Unit):
+        if isinstance(item, UnitsContainer):
             item = str(item)
-        try:
-            self.__getattr__(item)
+        if isinstance(item, str):
+            try:
+                self.parse_units_as_container(item)
+                return True
+            except UndefinedUnitError:
+                return False
+        elif isinstance(item, self.Unit):
+            if item._REGISTRY is not self:
+                # maybe we can also raise an error here
+                return False
+            # NOTE: this is guaranteed by an invariant of Unit. See `self._into_unit()` for details
             return True
-        except UndefinedUnitError:
-            return False
+        else:
+            raise TypeError(
+                f"Unsupported operation: `UnitRegistry.__contains__(<instance of {type(item)}>)`."
+            )
 
     def __dir__(self, /) -> list[str]:
         #: Calling dir(registry) gives all units, methods, and attributes.
