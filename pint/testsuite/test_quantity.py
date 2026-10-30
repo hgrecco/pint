@@ -20,6 +20,7 @@ from pint import (
     get_application_registry,
 )
 from pint.compat import np
+from pint.errors import UndefinedBehavior
 from pint.facets.plain.unit import UnitsContainer
 from pint.testsuite import QuantityTestCase, assert_no_warnings, helpers
 
@@ -1025,8 +1026,9 @@ class TestQuantityToCompact(QuantityTestCase):
         self.compare_quantity_compact(float("inf") * ureg.m, float("inf") * ureg.m)
 
     def test_nonnumeric_magnitudes(self):
-        with pytest.raises(TypeError):
-            _ = self.Q_(object(), "m")  # pyright: ignore[reportCallIssue,reportArgumentType]
+        q = self.Q_(object(), "m")  # pyright: ignore[reportCallIssue,reportArgumentType]
+        with pytest.warns(UndefinedBehavior):
+            q.to_compact()
 
     def test_very_large_to_compact(self):
         # This should not raise an IndexError

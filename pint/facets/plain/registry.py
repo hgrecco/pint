@@ -224,6 +224,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
     def __init__(
         self,
         filename: Iterable[str] | str | pathlib.Path | None = "",
+        *,
         on_redefinition: str = "warn",
         auto_reduce_dimensions: bool = False,
         autoconvert_to_preferred: bool = False,
@@ -252,6 +253,9 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 
         self._def_parser = delegates.txt_defparser.DefParser(
             delegates.ParserConfig(non_int_type), diskcache=self._diskcache
+        )
+        self._toml_parser = delegates.toml_defparser.TomlParser(
+            delegates.ParserConfig(non_int_type)
         )
 
         self.formatter = delegates.Formatter(self)
@@ -580,10 +584,16 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         if isinstance(file, (list, tuple)):
             # TODO: this hack was to keep it backwards compatible.
             parsed_project = self._def_parser.parse_string("\n".join(file))
+            definitions = self._def_parser.iter_parsed_project(parsed_project)
+        elif str(file).lower().endswith(".toml"):
+            # the disk cache is keyed on parsed text files, so TOML skips it
+            parsed_project = None
+            definitions = self._toml_parser.parse_file(file)
         else:
             parsed_project = self._def_parser.parse_file(file)
+            definitions = self._def_parser.iter_parsed_project(parsed_project)
 
-        for definition in self._def_parser.iter_parsed_project(parsed_project):
+        for definition in definitions:
             self._helper_dispatch_adder(definition)
 
         if rebuild_cache:
@@ -1414,8 +1424,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         Parameters
         ----------
         input_string
-
-        pattern_string:
+            The string to parse.
+        pattern
             The regex parse string
         case_sensitive, optional
             If true, a case sensitive matching of the unit name will be done in the registry.
@@ -1576,7 +1586,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         # we can finally convert the magnitude the way we wish
         magnitude = self._normalize_magnitude(value)
         if magnitude is NotImplemented:
-            raise TypeError(f"Invalid magnitude: {value!r}")
+            return cast(Magnitude, value)  # will be treated as a scalar
         return magnitude
 
     def _normalize_magnitude(self, value: object, /) -> Magnitude | NotImplementedType:
@@ -1599,6 +1609,18 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             )
         elif isinstance(value, Number) or is_array_or_duck(value):
             return cast(Magnitude, value)
+        # handle clearly meaningless or unintended values
+        elif isinstance(value, (dict, set, datetime.datetime, datetime.timedelta)):
+            raise TypeError(
+                f"Pint explicitly does not support {type(value)} magnitudes."
+            )
+        elif value is None:
+            raise TypeError(
+                "Pint attempted to construct a quantity with `None` as a magnitude! "
+                "This is likely unintentional, please double-check your code and make sure "
+                "you are not passing `None` as a magnitude, either directly to the `Quantity` "
+                "constructor or as an operand of an arithmetic operation."
+            )
         return NotImplemented
 
     def _as_magnitude_and_units(self, value: object) -> tuple[object, str] | None:
