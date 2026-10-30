@@ -27,6 +27,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     ClassVar,
+    Literal,
     Self,
     TypeAlias,
 )
@@ -584,7 +585,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         self._d, self._one, self._non_int_type = state
         self._hash = None
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: UnitsContainer | dict | str, /) -> bool:
         if isinstance(other, UnitsContainer):
             # UnitsContainer.__hash__(self) is not the same as hash(self); see
             # ParserHelper.__hash__ and __eq__.
@@ -605,10 +606,10 @@ class UnitsContainer(Mapping[str, Scalar]):
 
         return dict.__eq__(self._d, other)
 
-    def __str__(self) -> str:
+    def __str__(self, /) -> str:
         return self.__format__("")
 
-    def __repr__(self) -> str:
+    def __repr__(self, /) -> str:
         return f"UnitsContainer({repr(self._d)})"
 
     def __format__(self, spec: str) -> str:
@@ -673,7 +674,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         new._hash = None
         return new
 
-    def __rtruediv__(self, other):
+    def __rtruediv__(self, other: Self | Literal[1], /) -> Self:
         if not isinstance(other, self.__class__) and other != 1:
             err = "Cannot divide {} by UnitsContainer"
             raise TypeError(err.format(type(other)))
