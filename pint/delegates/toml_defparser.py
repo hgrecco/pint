@@ -272,8 +272,10 @@ class TomlParser:
         source = self._default_config.to_dimension_container(source)
         destination = self._default_config.to_dimension_container(destination)
         if arrow == "<->":
-            return BidirectionalRelation(source, destination, equation.strip())
-        return ForwardRelation(source, destination, equation.strip())
+            return BidirectionalRelation(
+                source, destination, equation.strip(), value_text=text
+            )
+        return ForwardRelation(source, destination, equation.strip(), value_text=text)
 
     def parse_context(self, d: dict[str, Any]):
         return ContextDefinition(

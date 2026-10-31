@@ -9,8 +9,9 @@ import pint
 from pint.delegates import ParserConfig
 from pint.delegates.toml_defparser import TomlParser
 from pint.delegates.toml_writer import TomlWriter
-from pint.facets.group.definitions import GroupDefinition
+from pint.facets.context.definitions import BidirectionalRelation, ContextDefinition
 from pint.facets.plain import definitions
+from pint.util import UnitsContainer
 
 PINT_DIR = pathlib.Path(pint.__file__).parent
 VERSION = 'version = "1.0"\n'
@@ -87,20 +88,34 @@ def test_modifier_keys(tmp_path):
 @pytest.mark.parametrize("non_int_type", [float, Decimal])
 def test_write_reads_back(tmp_path, non_int_type):
     parser = TomlParser(ParserConfig(non_int_type))
-    basic = [
-        d
-        for d in parser.parse_file(PINT_DIR / "default_en.toml")
-        if isinstance(d, BASIC)
-    ]
+    defs = parser.parse_file(PINT_DIR / "default_en.toml")
     f = tmp_path / "defs.toml"
-    TomlWriter().write_file(f, basic)
-    assert parser.parse_file(f) == basic
+    TomlWriter().write_file(f, defs)
+    assert parser.parse_file(f) == defs
+
+    txt = pint.UnitRegistry(PINT_DIR / "default_en.txt", non_int_type=non_int_type)
+    written = pint.UnitRegistry(f, non_int_type=non_int_type)
+    assert summary(written) == summary(txt)
 
 
 def test_write_rejects_other_definitions(tmp_path):
-    group = GroupDefinition("g", (), ())
-    with pytest.raises(TypeError, match="GroupDefinition"):
-        TomlWriter().write_file(tmp_path / "defs.toml", [group])
+    # base dimensions come from base units, so they have no section
+    dimension = definitions.DimensionDefinition("[length]")
+    with pytest.raises(TypeError, match="DimensionDefinition"):
+        TomlWriter().write_file(tmp_path / "defs.toml", [dimension])
+
+
+def test_write_keeps_relation_text(tmp_path):
+    defs = TomlParser(ParserConfig(float)).parse_file(PINT_DIR / "default_en.toml")
+    text = TomlWriter().dumps(defs)
+    assert '"[length] <-> [frequency]: speed_of_light / n / value"' in text
+    assert "defaults = {n = 1}" in text
+
+    # relations made in code are rebuilt
+    length, time = UnitsContainer({"[length]": 1}), UnitsContainer({"[time]": 1})
+    relation = BidirectionalRelation(length, time, "value / c")
+    context = ContextDefinition("c", (), {}, (relation,), ())
+    assert '"[length] <-> [time]: value / c"' in TomlWriter().dumps([context])
 
 
 def test_write_keeps_value_text(tmp_path):

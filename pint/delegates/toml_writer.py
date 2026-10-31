@@ -5,9 +5,9 @@ pint.delegates.toml_writer
 Writer for TOML definition files, read back by
 :class:`~pint.delegates.toml_defparser.TomlParser`.
 
-Only defaults, prefixes, derived dimensions and units are written. Values are
-written from their source text (``value_text``), or rebuilt for definitions
-made in code, e.g. ``5 / 9 * kelvin`` becomes ``0.5555555555555556 * kelvin``.
+Every section the parser reads is written. Values and relations are written
+from their source text (``value_text``), or rebuilt for definitions made in
+code, e.g. ``5 / 9 * kelvin`` becomes ``0.5555555555555556 * kelvin``.
 
 :copyright: 2025 by Pint Authors, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
@@ -20,7 +20,10 @@ import pathlib
 from collections.abc import Iterable
 from typing import Any
 
+from ..facets.context.definitions import BidirectionalRelation, ContextDefinition
+from ..facets.group.definitions import GroupDefinition
 from ..facets.plain import definitions
+from ..facets.system.definitions import SystemDefinition
 from .toml_defparser import FORMAT_VERSION
 
 try:
@@ -51,8 +54,9 @@ class TomlWriter:
         filename :
             path of the TOML definitions file.
         defs :
-            DefaultsDefinition, PrefixDefinition, DerivedDimensionDefinition
-            and UnitDefinition objects, e.g. from ``TomlParser.parse_file``.
+            DefaultsDefinition, PrefixDefinition, DerivedDimensionDefinition,
+            UnitDefinition, GroupDefinition, SystemDefinition and
+            ContextDefinition objects, e.g. from ``TomlParser.parse_file``.
 
         Raises
         ------
@@ -68,6 +72,9 @@ class TomlWriter:
             definitions.PrefixDefinition: [],
             definitions.DerivedDimensionDefinition: [],
             definitions.UnitDefinition: [],
+            GroupDefinition: [],
+            SystemDefinition: [],
+            ContextDefinition: [],
         }
         for d in defs:
             # subclasses too, e.g. the definitions of the text parser
@@ -86,6 +93,9 @@ class TomlWriter:
                 self.dump_dimensions(sections[definitions.DerivedDimensionDefinition]),
             ),
             ("unit", self.dump_units(sections[definitions.UnitDefinition])),
+            ("group", self.dump_groups(sections[GroupDefinition])),
+            ("system", self.dump_systems(sections[SystemDefinition])),
+            ("context", self.dump_contexts(sections[ContextDefinition])),
         ):
             if table:
                 doc.add(name, table)
@@ -111,6 +121,15 @@ class TomlWriter:
 
     def dump_units(self, defs: list):
         return self._build_section_table({d.name: self.format_unit(d) for d in defs})
+
+    def dump_groups(self, defs: list):
+        return self._build_array_of_tables([self.format_group(d) for d in defs])
+
+    def dump_systems(self, defs: list):
+        return self._build_array_of_tables([self.format_system(d) for d in defs])
+
+    def dump_contexts(self, defs: list):
+        return self._build_array_of_tables([self.format_context(d) for d in defs])
 
     # Entries
 
@@ -144,6 +163,53 @@ class TomlWriter:
             {"value": value, **modifiers, **self._symbol_and_aliases_dict(d)}
         )
 
+    def format_group(self, d):
+        return self._build_table(
+            {
+                "name": d.name,
+                "using_group_names": list(d.using_group_names),
+                "definitions": self._build_section_table(
+                    {u.name: self.format_unit(u) for u in d.definitions}
+                ),
+            }
+        )
+
+    def format_system(self, d):
+        rules = [
+            f"{r.new_unit_name}: {r.old_unit_name}"
+            if r.old_unit_name
+            else r.new_unit_name
+            for r in d.rules
+        ]
+        return self._build_table(
+            {
+                "name": d.name,
+                "using_group_names": list(d.using_group_names),
+                "rules": self._build_multiline_array(rules),
+            }
+        )
+
+    def format_context(self, d):
+        return self._build_table(
+            {
+                "name": d.name,
+                "aliases": list(d.aliases),
+                "defaults": self._build_inline_table(d.defaults),
+                "relations": self._build_multiline_array(
+                    [self.format_relation(r) for r in d.relations]
+                ),
+                "redefinitions": self._build_section_table(
+                    {u.name: self.format_unit(u) for u in d.redefinitions}
+                ),
+            }
+        )
+
+    def format_relation(self, r) -> str:
+        if r.value_text:
+            return r.value_text
+        arrow = "<->" if isinstance(r, BidirectionalRelation) else "->"
+        return f"{r.src} {arrow} {r.dst}: {r.equation}"
+
     @staticmethod
     def _symbol_and_aliases_dict(d) -> dict[str, Any]:
         names: dict[str, Any] = {}
@@ -161,6 +227,28 @@ class TomlWriter:
         for name, entry in entries.items():
             table.add(name, entry)
         return table
+
+    @staticmethod
+    def _build_table(values: dict[str, Any]):
+        """A table of the given values, leaving out empty ones."""
+        table = tomlkit.table()
+        for key, value in values.items():
+            if value:
+                table.add(key, value)
+        return table
+
+    @staticmethod
+    def _build_array_of_tables(tables: list):
+        array = tomlkit.aot()
+        for table in tables:
+            array.append(table)
+        return array
+
+    @staticmethod
+    def _build_multiline_array(values: list[str]):
+        array = tomlkit.array()
+        array.extend(values)
+        return array.multiline(len(values) > 1)
 
     def _build_inline_table(self, values: dict[str, Any]):
         entry = tomlkit.inline_table()
