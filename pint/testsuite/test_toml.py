@@ -164,3 +164,31 @@ def test_write_keeps_modifier_text(source):
     assert 'offset = "233.15 + 200 / 9"' in text
     assert "offset = 273.15," in text
     assert "logbase = 2.71828182845904523536028747135266249775724709369995" in text
+
+
+@pytest.mark.parametrize("non_int_type", [float, Decimal])
+def test_write_keeps_context_defaults_text(tmp_path, non_int_type):
+    f = tmp_path / "defs.toml"
+    f.write_text(
+        VERSION + "[unit]\n"
+        'meter = { value = "[length]" }\n'
+        'second = { value = "[time]" }\n'
+        "[[context]]\n"
+        'name = "demo"\n'
+        'defaults = { n = "2**10", k = 1.00000000000000000001 }\n'
+        'relations = ["[length] <-> [time]: value * n / k"]\n',
+        encoding="utf-8",
+    )
+    defs = TomlParser(ParserConfig(non_int_type)).parse_file(f)
+    assert 'defaults = {n = "2**10", k = 1.00000000000000000001}' in (
+        TomlWriter().dumps(defs)
+    )
+
+
+def test_txt_context_defaults_text():
+    context = ContextDefinition.from_lines(
+        ["@context(n = 1, k = 2**10) demo", "[length] <-> [time]: value * n / k"],
+        float,
+    )
+    assert context.defaults == {"n": 1, "k": 1024}
+    assert context.defaults_text == {"n": "1", "k": "2**10"}

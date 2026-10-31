@@ -99,6 +99,10 @@ class ContextDefinition(errors.WithDefErr):
     defaults: dict[str, numbers.Number]
     relations: tuple[Relation, ...]
     redefinitions: tuple[UnitDefinition, ...]
+    #: source text of the defaults, by name
+    defaults_text: dict[str, str] = field(
+        default_factory=dict, kw_only=True, compare=False
+    )
 
     @property
     def variables(self) -> set[str]:

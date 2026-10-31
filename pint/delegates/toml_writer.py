@@ -196,7 +196,14 @@ class TomlWriter:
             {
                 "name": d.name,
                 "aliases": list(d.aliases),
-                "defaults": self._build_inline_table(d.defaults),
+                "defaults": self._build_inline_table(
+                    {
+                        k: self._build_number(d.defaults_text[k])
+                        if k in d.defaults_text
+                        else v
+                        for k, v in d.defaults.items()
+                    }
+                ),
                 "relations": self._build_multiline_array(
                     [self.format_relation(r) for r in d.relations]
                 ),

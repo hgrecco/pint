@@ -19,7 +19,7 @@ from __future__ import annotations
 import numbers
 import re
 import typing as ty
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import flexparser as fp
 
@@ -89,6 +89,10 @@ class BeginContext(PintParsedStatement):
     name: str
     aliases: tuple[str, ...]
     defaults: dict[str, numbers.Number]
+    #: source text of the defaults, by name
+    defaults_text: dict[str, str] = field(
+        default_factory=dict, kw_only=True, compare=False
+    )
 
     @classmethod
     def from_string_and_config(
@@ -113,16 +117,19 @@ class BeginContext(PintParsedStatement):
         if defaults:
             txt = defaults
             try:
-                defaults = (part.split("=") for part in defaults.strip("()").split(","))
-                defaults = {str(k).strip(): config.to_number(v) for k, v in defaults}
+                parts = (part.split("=") for part in defaults.strip("()").split(","))
+                defaults_text = {k.strip(): v.strip() for k, v in parts}
+                defaults = {
+                    k: config.to_number(text) for k, text in defaults_text.items()
+                }
             except (ValueError, TypeError) as exc:
                 return common.DefinitionSyntaxError(
                     f"Could not parse Context definition defaults '{txt}' {exc}"
                 )
         else:
-            defaults = {}
+            defaults, defaults_text = {}, {}
 
-        return cls(name, tuple(aliases), defaults)
+        return cls(name, tuple(aliases), defaults, defaults_text=defaults_text)
 
 
 @dataclass(frozen=True)
@@ -168,7 +175,12 @@ class ContextDefinition(
 
     def derive_definition(self) -> definitions.ContextDefinition:
         return definitions.ContextDefinition(
-            self.name, self.aliases, self.defaults, self.relations, self.redefinitions
+            self.name,
+            self.aliases,
+            self.defaults,
+            self.relations,
+            self.redefinitions,
+            defaults_text=self.opening.defaults_text,
         )
 
     @property

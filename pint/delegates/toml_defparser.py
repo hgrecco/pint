@@ -278,10 +278,12 @@ class TomlParser:
         return ForwardRelation(source, destination, equation.strip(), value_text=text)
 
     def parse_context(self, d: dict[str, Any]):
+        defaults_text = {k: str(v) for k, v in d.get("defaults", {}).items()}
         return ContextDefinition(
             d["name"],
             tuple(d.get("aliases", ())),
-            {k: self._number(v) for k, v in d.get("defaults", {}).items()},
+            {k: self._number(text) for k, text in defaults_text.items()},
             tuple(self.parse_relation(r) for r in d.get("relations", ())),
             tuple(self.parse_unit(k, v) for k, v in d.get("redefinitions", {}).items()),
+            defaults_text=defaults_text,
         )
