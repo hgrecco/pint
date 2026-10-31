@@ -99,6 +99,17 @@ def test_write_rejects_other_definitions(tmp_path):
         TomlWriter().write_file(tmp_path / "defs.toml", [dimension])
 
 
+def test_write_merges_defaults():
+    # like the registry, later defaults only replace the keys they set
+    defs = [
+        definitions.DefaultsDefinition("mygroup", "cgs"),
+        definitions.DefaultsDefinition(None, "SI"),
+    ]
+    text = TomlWriter().dumps(defs)
+    assert 'group = "mygroup"' in text
+    assert 'system = "SI"' in text
+
+
 def test_write_keeps_relation_text(tmp_path):
     defs = TomlParser(ParserConfig(float)).parse_file(PINT_DIR / "default_en.toml")
     text = TomlWriter().dumps(defs)

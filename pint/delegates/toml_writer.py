@@ -106,12 +106,7 @@ class TomlWriter:
     # Sections
 
     def dump_defaults(self, defs: list):
-        table = tomlkit.table()
-        if defs:
-            d = defs[-1]
-            for key, value in d.items():
-                table.add(key, value)
-        return table
+        return self.build_section_table({k: v for d in defs for k, v in d.items()})
 
     def dump_prefixes(self, defs: list):
         return self.build_section_table({d.name: self.format_prefix(d) for d in defs})
