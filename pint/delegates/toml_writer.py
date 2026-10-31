@@ -136,7 +136,7 @@ class TomlWriter:
     # Entries
 
     def format_prefix(self, d):
-        value = self._build_number(d.value_text) if d.value_text else d.value
+        value = self._toml_number(d.value_text) if d.value_text else d.value
         return self._build_inline_table(
             {"value": value, **self._symbol_and_aliases_dict(d)}
         )
@@ -160,7 +160,7 @@ class TomlWriter:
             if f.name != "scale"
         }
         for key, text in d.modifiers_text.items():
-            modifiers[key] = self._build_number(text)
+            modifiers[key] = self._toml_number(text)
         return self._build_inline_table(
             {"value": value, **modifiers, **self._symbol_and_aliases_dict(d)}
         )
@@ -198,7 +198,7 @@ class TomlWriter:
                 "aliases": list(d.aliases),
                 "defaults": self._build_inline_table(
                     {
-                        k: self._build_number(d.defaults_text[k])
+                        k: self._toml_number(d.defaults_text[k])
                         if k in d.defaults_text
                         else v
                         for k, v in d.defaults.items()
@@ -262,11 +262,11 @@ class TomlWriter:
     def _build_inline_table(self, values: dict[str, Any]):
         entry = tomlkit.inline_table()
         for key, value in values.items():
-            entry.add(key, self._build_toml_value(value))
+            entry.add(key, self._as_toml_value(value))
         return entry
 
     @staticmethod
-    def _build_number(text: str):
+    def _toml_number(text: str):
         """The TOML representation of a number. Returns an int, float or string.
 
         Uses a string only when the text is not a TOML number, e.g. ``2**10``.
@@ -278,7 +278,7 @@ class TomlWriter:
         return item if isinstance(item, (int, float)) else text
 
     @staticmethod
-    def _build_toml_value(value: Any):
+    def _as_toml_value(value: Any):
         if isinstance(value, (str, list, int, float)):
             return value
         # other number types, e.g. Decimal, are read back with to_number
