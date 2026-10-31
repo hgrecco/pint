@@ -6,6 +6,12 @@ from decimal import Decimal
 import pytest
 
 import pint
+from pint.delegates import ParserConfig
+from pint.delegates.toml_defparser import TomlParser
+from pint.delegates.toml_writer import TomlWriter
+from pint.facets.context.definitions import BidirectionalRelation, ContextDefinition
+from pint.facets.plain import definitions
+from pint.util import UnitsContainer
 
 PINT_DIR = pathlib.Path(pint.__file__).parent
 VERSION = 'version = "1.0"\n'
@@ -71,3 +77,113 @@ def test_modifier_keys(tmp_path):
     assert ureg.Quantity(0, "celsius").to("K").magnitude == pytest.approx(273.15)
     assert ureg.Quantity(32, "fahrenheit").to("celsius").magnitude == pytest.approx(0)
     assert ureg.Quantity(2, "B").to("").magnitude == pytest.approx(100)
+
+
+@pytest.mark.parametrize("non_int_type", [float, Decimal])
+def test_write_reads_back(tmp_path, non_int_type):
+    parser = TomlParser(ParserConfig(non_int_type))
+    defs = parser.parse_file(PINT_DIR / "default_en.toml")
+    f = tmp_path / "defs.toml"
+    TomlWriter().write_file(f, defs)
+    assert parser.parse_file(f) == defs
+
+    txt = pint.UnitRegistry(PINT_DIR / "default_en.txt", non_int_type=non_int_type)
+    written = pint.UnitRegistry(f, non_int_type=non_int_type)
+    assert summary(written) == summary(txt)
+
+
+def test_write_rejects_other_definitions(tmp_path):
+    # base dimensions come from base units, so they have no section
+    dimension = definitions.DimensionDefinition("[length]")
+    with pytest.raises(TypeError, match="DimensionDefinition"):
+        TomlWriter().write_file(tmp_path / "defs.toml", [dimension])
+
+
+def test_write_keeps_relation_text(tmp_path):
+    defs = TomlParser(ParserConfig(float)).parse_file(PINT_DIR / "default_en.toml")
+    text = TomlWriter().dumps(defs)
+    assert '"[length] <-> [frequency]: speed_of_light / n / value"' in text
+    assert "defaults = {n = 1}" in text
+
+    # relations made in code are rebuilt
+    length, time = UnitsContainer({"[length]": 1}), UnitsContainer({"[time]": 1})
+    relation = BidirectionalRelation(length, time, "value / c")
+    context = ContextDefinition("c", (), {}, (relation,), ())
+    assert '"[length] <-> [time]: value / c"' in TomlWriter().dumps([context])
+
+
+def test_write_keeps_value_text(tmp_path):
+    f = tmp_path / "defs.toml"
+    f.write_text(
+        VERSION + "[prefix]\n"
+        'kilo = { value = 1e3, symbol = "k" }\n'
+        'kibi = { value = "2**10", symbol = "Ki" }\n'
+        "[dimension]\n"
+        'area = { value = "[length] ** 2" }\n'
+        "[unit]\n"
+        'kelvin = { value = "[temperature]", symbol = "K" }\n'
+        'fahrenheit = { value = "5 / 9 * kelvin", offset = 255.37 }\n',
+        encoding="utf-8",
+    )
+    text = TomlWriter().dumps(TomlParser(ParserConfig(float)).parse_file(f))
+    assert 'kilo = {value = 1e3, symbol = "k"}' in text
+    assert 'kibi = {value = "2**10", symbol = "Ki"}' in text
+    assert 'area = {value = "[length] ** 2"}' in text
+    assert 'fahrenheit = {value = "5 / 9 * kelvin", offset = 255.37}' in text
+
+
+def test_write_txt_definitions(tmp_path):
+    parser = pint.UnitRegistry(None)._def_parser
+    defs = list(
+        parser.iter_parsed_project(parser.parse_file(PINT_DIR / "default_en.txt"))
+    )
+    f = tmp_path / "defs.toml"
+    TomlWriter().write_file(f, defs)
+    text = f.read_text(encoding="utf-8")
+    assert 'kibi = {value = "2**10", symbol = "Ki"}' in text
+    back = TomlParser(ParserConfig(float)).parse_file(f)
+    # the writer gathers derived dimensions in one section, changing the order
+    assert {d.name: d.value_text for d in back if hasattr(d, "value_text")} == {
+        d.name: d.value_text for d in defs if hasattr(d, "value_text")
+    }
+
+
+@pytest.mark.parametrize("source", ["default_en.toml", "default_en.txt"])
+def test_write_keeps_modifier_text(source):
+    if source.endswith(".toml"):
+        defs = TomlParser(ParserConfig(float)).parse_file(PINT_DIR / source)
+    else:
+        parser = pint.UnitRegistry(None)._def_parser
+        defs = parser.iter_parsed_project(parser.parse_file(PINT_DIR / source))
+    text = TomlWriter().dumps(defs)
+    assert 'offset = "233.15 + 200 / 9"' in text
+    assert "offset = 273.15," in text
+    assert "logbase = 2.71828182845904523536028747135266249775724709369995" in text
+
+
+@pytest.mark.parametrize("non_int_type", [float, Decimal])
+def test_write_keeps_context_defaults_text(tmp_path, non_int_type):
+    f = tmp_path / "defs.toml"
+    f.write_text(
+        VERSION + "[unit]\n"
+        'meter = { value = "[length]" }\n'
+        'second = { value = "[time]" }\n'
+        "[[context]]\n"
+        'name = "demo"\n'
+        'defaults = { n = "2**10", k = 1.00000000000000000001 }\n'
+        'relations = ["[length] <-> [time]: value * n / k"]\n',
+        encoding="utf-8",
+    )
+    defs = TomlParser(ParserConfig(non_int_type)).parse_file(f)
+    assert 'defaults = {n = "2**10", k = 1.00000000000000000001}' in (
+        TomlWriter().dumps(defs)
+    )
+
+
+def test_txt_context_defaults_text():
+    context = ContextDefinition.from_lines(
+        ["@context(n = 1, k = 2**10) demo", "[length] <-> [time]: value * n / k"],
+        float,
+    )
+    assert context.defaults == {"n": 1, "k": 1024}
+    assert context.defaults_text == {"n": "1", "k": "2**10"}
