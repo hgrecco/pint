@@ -361,12 +361,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
     def _register_adder[T](
         self,
         definition_class: type[T],
-        adder_func: Callable[
-            [
-                T,
-            ],
-            None,
-        ],
+        adder_func: Callable[[T], None],
     ) -> None:
         """Register a block definition."""
         self._adders[definition_class] = adder_func
@@ -380,34 +375,43 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         self._register_adder(DimensionDefinition, self._add_dimension)
         self._register_adder(DerivedDimensionDefinition, self._add_derived_dimension)
 
-    def __deepcopy__(self, memo) -> type[Self]:
+    def __deepcopy__(self, memo: dict[int, Any] | None = None) -> Self:
         new = object.__new__(type(self))
         new.__dict__ = copy.deepcopy(self.__dict__, memo)
         new._init_dynamic_classes()
         return new
 
-    def __getattr__(self, item: str) -> UnitT:
+    def __getattr__(self, item: str, /) -> UnitT:
         getattr_maybe_raise(self, item)
 
         # self.Unit will call parse_units
         return self.Unit(item)
 
-    def __contains__(self, item: str | UnitT) -> bool:
-        """Support checking prefixed units with the `in` operator"""
-        if isinstance(item, self.Unit):
-            item = str(item)
-        try:
-            self.__getattr__(item)
+    def __contains__(self, item: str | UnitT, /) -> bool:
+        """Support checking prefixed units with the `in` operator."""
+        if isinstance(item, str):
+            try:
+                self.parse_units_as_container(item)
+                return True
+            except UndefinedUnitError:
+                return False
+        elif isinstance(item, self.Unit):
+            if item._REGISTRY is not self:
+                # maybe we can also raise an error here
+                return False
+            # NOTE: this is guaranteed by an invariant of Unit. See `self._into_unit()` for details
             return True
-        except UndefinedUnitError:
-            return False
+        else:
+            raise TypeError(
+                f"Unsupported operation: `UnitRegistry.__contains__(<instance of {type(item)}>)`."
+            )
 
-    def __dir__(self) -> list[str]:
+    def __dir__(self, /) -> list[str]:
         #: Calling dir(registry) gives all units, methods, and attributes.
         #: Also used for autocompletion in IPython.
         return list(self._units.keys()) + list(object.__dir__(self))
 
-    def __iter__(self) -> Iterator[str]:
+    def __iter__(self, /) -> Iterator[str]:
         """Allows for listing all units in registry with `list(ureg)`.
 
         Returns
@@ -417,7 +421,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         return iter(sorted(self._units.keys()))
 
     @property
-    def cache_folder(self) -> pathlib.Path | None:
+    def cache_folder(self, /) -> pathlib.Path | None:
         if self._diskcache:
             return self._diskcache.cache_folder
         return None
@@ -1359,7 +1363,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             value = units[name]
             if not cname:
                 continue
-            if as_delta and (many or (not many and value != 1)):
+            if as_delta and (many or value != 1):
                 definition = self._units[cname]
                 # Logarithmic units have no delta counterpart.
                 if not (definition.is_multiplicative or definition.is_logarithmic):
@@ -1531,19 +1535,36 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         """Convenience method that converts the argument into units.
 
         Intended for use by the `Unit` and `Quantity` constructors.
+
+        This function's return value is guaranteed to only contain units that are registered in `self`.
         """
         if units is None:
             return self.UnitsContainer()
-        if isinstance(units, (UnitsContainer, UnitDefinition)):
+        elif isinstance(units, PlainUnit):
+            if units._REGISTRY is not self:
+                raise ValueError(
+                    "Pint explicitly disallows mixing units from different registries, "
+                    "because they are not guaranteed to have the same meaning."
+                )
+            # NOTE: since it's a PlainUnit invariant, we know these units are valid for this registry,
+            #   so we can return them as-is without further validation.
+            return units._units
+        elif isinstance(units, UnitsContainer):
+            for u in units:
+                # this will raise `UndefinedUnitError` if the unit is not defined here
+                self.get_name(u)
             return units
         elif isinstance(units, str):
-            return self.parse_units(units)._units
-        elif isinstance(units, PlainUnit):
-            return units._units
+            return self.parse_units_as_container(units)
         elif isinstance(units, PlainQuantity):
+            if units._REGISTRY is not self:
+                raise ValueError(
+                    "Pint explicitly disallows mixing units from different registries, "
+                    "because they are not guaranteed to have the same meaning."
+                )
             if units.magnitude != 1:
                 logger.warning(
-                    "Treating a non-unity quantity as units: the magnitude has been ignored!"
+                    "Treating a non-unity quantity as pure units: the magnitude has been ignored!"
                     # specialized warning message for maintaining backwards compatibility
                     if target_class_name is None
                     else f"Creating new {target_class_name} using a non unity PlainQuantity as units."
