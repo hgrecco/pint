@@ -136,7 +136,7 @@ class TomlWriter:
     # Entries
 
     def format_prefix(self, d):
-        value = self._number_or_text(d.value_text) if d.value_text else d.value
+        value = self._toml_repr(d.value_text) if d.value_text else d.value
         return self._build_inline_table(
             {"value": value, **self._symbol_and_aliases_dict(d)}
         )
@@ -160,7 +160,7 @@ class TomlWriter:
             if f.name != "scale"
         }
         for key, text in d.modifiers_text.items():
-            modifiers[key] = self._number_or_text(text)
+            modifiers[key] = self._toml_repr(text)
         return self._build_inline_table(
             {"value": value, **modifiers, **self._symbol_and_aliases_dict(d)}
         )
@@ -198,7 +198,7 @@ class TomlWriter:
                 "aliases": list(d.aliases),
                 "defaults": self._build_inline_table(
                     {
-                        k: self._number_or_text(d.defaults_text[k])
+                        k: self._toml_repr(d.defaults_text[k])
                         if k in d.defaults_text
                         else v
                         for k, v in d.defaults.items()
@@ -270,7 +270,7 @@ class TomlWriter:
         return entry
 
     @staticmethod
-    def _number_or_text(text: str):
+    def _toml_repr(text: str):
         """The TOML representation of a number. Returns an int, float or string.
 
         Uses a string only when the text is not a TOML number, e.g. ``2**10``.
