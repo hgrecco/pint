@@ -259,10 +259,14 @@ class TomlWriter:
         array.extend(values)
         return array.multiline(len(values) > 1)
 
-    def _build_inline_table(self, values: dict[str, Any]):
+    @staticmethod
+    def _build_inline_table(values: dict[str, Any]):
         entry = tomlkit.inline_table()
         for key, value in values.items():
-            entry.add(key, self._as_toml_value(value))
+            if not isinstance(value, (str, list, int, float)):
+                # other number types, e.g. Decimal, are read back with to_number
+                value = str(value)
+            entry.add(key, value)
         return entry
 
     @staticmethod
@@ -276,10 +280,3 @@ class TomlWriter:
         except tomlkit.exceptions.ParseError:
             return text
         return item if isinstance(item, (int, float)) else text
-
-    @staticmethod
-    def _as_toml_value(value: Any):
-        if isinstance(value, (str, list, int, float)):
-            return value
-        # other number types, e.g. Decimal, are read back with to_number
-        return str(value)
