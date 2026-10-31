@@ -22,7 +22,12 @@ from typing import Any
 
 from ..facets.context.definitions import BidirectionalRelation, ContextDefinition
 from ..facets.group.definitions import GroupDefinition
-from ..facets.plain import definitions
+from ..facets.plain.definitions import (
+    DefaultsDefinition,
+    DerivedDimensionDefinition,
+    PrefixDefinition,
+    UnitDefinition,
+)
 from ..facets.system.definitions import SystemDefinition
 from .toml_defparser import FORMAT_VERSION
 
@@ -68,10 +73,10 @@ class TomlWriter:
     def dumps(self, defs: Iterable) -> str:
         """Return the TOML text for definitions, see :meth:`write_file`."""
         sections: dict[type, list] = {
-            definitions.DefaultsDefinition: [],
-            definitions.PrefixDefinition: [],
-            definitions.DerivedDimensionDefinition: [],
-            definitions.UnitDefinition: [],
+            DefaultsDefinition: [],
+            PrefixDefinition: [],
+            DerivedDimensionDefinition: [],
+            UnitDefinition: [],
             GroupDefinition: [],
             SystemDefinition: [],
             ContextDefinition: [],
@@ -86,13 +91,10 @@ class TomlWriter:
         doc = tomlkit.document()
         doc.add("version", FORMAT_VERSION)
         for name, table in (
-            ("defaults", self.dump_defaults(sections[definitions.DefaultsDefinition])),
-            ("prefix", self.dump_prefixes(sections[definitions.PrefixDefinition])),
-            (
-                "dimension",
-                self.dump_dimensions(sections[definitions.DerivedDimensionDefinition]),
-            ),
-            ("unit", self.dump_units(sections[definitions.UnitDefinition])),
+            ("defaults", self.dump_defaults(sections[DefaultsDefinition])),
+            ("prefix", self.dump_prefixes(sections[PrefixDefinition])),
+            ("dimension", self.dump_dimensions(sections[DerivedDimensionDefinition])),
+            ("unit", self.dump_units(sections[UnitDefinition])),
             ("group", self.dump_groups(sections[GroupDefinition])),
             ("system", self.dump_systems(sections[SystemDefinition])),
             ("context", self.dump_contexts(sections[ContextDefinition])),
