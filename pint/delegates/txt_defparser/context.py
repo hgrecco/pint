@@ -40,7 +40,7 @@ def _from_string_and_context_sep[T: ForwardRelation | BidirectionalRelation](
 
     parts = rel.split(separator)
 
-    src, dst = (config.to_dimension_container(s) for s in parts)
+    src, dst = (config.to_dimension_container(part) for part in parts)
 
     return cls(src, dst, eq.strip(), value_text=s.strip())
 
