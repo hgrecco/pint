@@ -114,35 +114,35 @@ class TomlWriter:
         return table
 
     def dump_prefixes(self, defs: list):
-        return self._build_section_table({d.name: self.format_prefix(d) for d in defs})
+        return self.build_section_table({d.name: self.format_prefix(d) for d in defs})
 
     def dump_dimensions(self, defs: list):
-        return self._build_section_table(
+        return self.build_section_table(
             {d.name[1:-1]: self.format_dimension(d) for d in defs}
         )
 
     def dump_units(self, defs: list):
-        return self._build_section_table({d.name: self.format_unit(d) for d in defs})
+        return self.build_section_table({d.name: self.format_unit(d) for d in defs})
 
     def dump_groups(self, defs: list):
-        return self._build_array_of_tables([self.format_group(d) for d in defs])
+        return self.build_array_of_tables([self.format_group(d) for d in defs])
 
     def dump_systems(self, defs: list):
-        return self._build_array_of_tables([self.format_system(d) for d in defs])
+        return self.build_array_of_tables([self.format_system(d) for d in defs])
 
     def dump_contexts(self, defs: list):
-        return self._build_array_of_tables([self.format_context(d) for d in defs])
+        return self.build_array_of_tables([self.format_context(d) for d in defs])
 
     # Entries
 
     def format_prefix(self, d):
-        value = self._toml_repr(d.value_text) if d.value_text else d.value
-        return self._build_inline_table(
-            {"value": value, **self._symbol_and_aliases_dict(d)}
+        value = self.toml_repr(d.value_text) if d.value_text else d.value
+        return self.build_inline_table(
+            {"value": value, **self.symbol_and_aliases_dict(d)}
         )
 
     def format_dimension(self, d):
-        return self._build_inline_table({"value": d.value_text or str(d.reference)})
+        return self.build_inline_table({"value": d.value_text or str(d.reference)})
 
     def format_unit(self, d):
         converter = d.converter
@@ -160,17 +160,17 @@ class TomlWriter:
             if f.name != "scale"
         }
         for key, text in d.modifiers_text.items():
-            modifiers[key] = self._toml_repr(text)
-        return self._build_inline_table(
-            {"value": value, **modifiers, **self._symbol_and_aliases_dict(d)}
+            modifiers[key] = self.toml_repr(text)
+        return self.build_inline_table(
+            {"value": value, **modifiers, **self.symbol_and_aliases_dict(d)}
         )
 
     def format_group(self, d):
-        return self._build_table(
+        return self.build_table(
             {
                 "name": d.name,
                 "using_group_names": list(d.using_group_names),
-                "definitions": self._build_section_table(
+                "definitions": self.build_section_table(
                     {u.name: self.format_unit(u) for u in d.definitions}
                 ),
             }
@@ -183,31 +183,31 @@ class TomlWriter:
             else r.new_unit_name
             for r in d.rules
         ]
-        return self._build_table(
+        return self.build_table(
             {
                 "name": d.name,
                 "using_group_names": list(d.using_group_names),
-                "rules": self._build_multiline_array(rules),
+                "rules": self.build_multiline_array(rules),
             }
         )
 
     def format_context(self, d):
-        return self._build_table(
+        return self.build_table(
             {
                 "name": d.name,
                 "aliases": list(d.aliases),
-                "defaults": self._build_inline_table(
+                "defaults": self.build_inline_table(
                     {
-                        k: self._toml_repr(d.defaults_text[k])
+                        k: self.toml_repr(d.defaults_text[k])
                         if k in d.defaults_text
                         else v
                         for k, v in d.defaults.items()
                     }
                 ),
-                "relations": self._build_multiline_array(
+                "relations": self.build_multiline_array(
                     [self.format_relation(r) for r in d.relations]
                 ),
-                "redefinitions": self._build_section_table(
+                "redefinitions": self.build_section_table(
                     {u.name: self.format_unit(u) for u in d.redefinitions}
                 ),
             }
@@ -220,7 +220,7 @@ class TomlWriter:
         return f"{r.src} {arrow} {r.dst}: {r.equation}"
 
     @staticmethod
-    def _symbol_and_aliases_dict(d) -> dict[str, Any]:
+    def symbol_and_aliases_dict(d) -> dict[str, Any]:
         names: dict[str, Any] = {}
         if d.defined_symbol:
             names["symbol"] = d.defined_symbol
@@ -231,14 +231,14 @@ class TomlWriter:
     # Building TOML items
 
     @staticmethod
-    def _build_section_table(entries: dict[str, Any]):
+    def build_section_table(entries: dict[str, Any]):
         table = tomlkit.table()
         for name, entry in entries.items():
             table.add(name, entry)
         return table
 
     @staticmethod
-    def _build_table(values: dict[str, Any]):
+    def build_table(values: dict[str, Any]):
         """A table of the given values, leaving out empty ones."""
         table = tomlkit.table()
         for key, value in values.items():
@@ -247,20 +247,20 @@ class TomlWriter:
         return table
 
     @staticmethod
-    def _build_array_of_tables(tables: list):
+    def build_array_of_tables(tables: list):
         array = tomlkit.aot()
         for table in tables:
             array.append(table)
         return array
 
     @staticmethod
-    def _build_multiline_array(values: list[str]):
+    def build_multiline_array(values: list[str]):
         array = tomlkit.array()
         array.extend(values)
         return array.multiline(len(values) > 1)
 
     @staticmethod
-    def _build_inline_table(values: dict[str, Any]):
+    def build_inline_table(values: dict[str, Any]):
         entry = tomlkit.inline_table()
         for key, value in values.items():
             if not isinstance(value, (str, list, int, float)):
@@ -270,7 +270,7 @@ class TomlWriter:
         return entry
 
     @staticmethod
-    def _toml_repr(text: str):
+    def toml_repr(text: str):
         """The TOML representation of a number. Returns an int, float or string.
 
         Uses a string only when the text is not a TOML number, e.g. ``2**10``.
