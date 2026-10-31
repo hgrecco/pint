@@ -63,29 +63,27 @@ class TomlWriter:
 
     def dumps(self, defs: Iterable) -> str:
         """Return the TOML text for definitions, see :meth:`write_file`."""
-        sections: dict[type, list] = {
-            definitions.DefaultsDefinition: [],
-            definitions.PrefixDefinition: [],
-            definitions.DerivedDimensionDefinition: [],
-            definitions.UnitDefinition: [],
+        section_names = {
+            definitions.DefaultsDefinition: "defaults",
+            definitions.PrefixDefinition: "prefix",
+            definitions.DerivedDimensionDefinition: "dimension",
+            definitions.UnitDefinition: "unit",
         }
+        sections: dict[str, list] = {name: [] for name in section_names.values()}
         for d in defs:
             # subclasses too, e.g. the definitions of the text parser
-            kind = next((k for k in sections if isinstance(d, k)), None)
+            kind = next((k for k in section_names if isinstance(d, k)), None)
             if kind is None:
                 raise TypeError(f"cannot write {type(d).__name__} to TOML")
-            sections[kind].append(d)
+            sections[section_names[kind]].append(d)
 
         doc = tomlkit.document()
         doc.add("version", FORMAT_VERSION)
         for name, table in (
-            ("defaults", self.dump_defaults(sections[definitions.DefaultsDefinition])),
-            ("prefix", self.dump_prefixes(sections[definitions.PrefixDefinition])),
-            (
-                "dimension",
-                self.dump_dimensions(sections[definitions.DerivedDimensionDefinition]),
-            ),
-            ("unit", self.dump_units(sections[definitions.UnitDefinition])),
+            ("defaults", self.dump_defaults(sections["defaults"])),
+            ("prefix", self.dump_prefixes(sections["prefix"])),
+            ("dimension", self.dump_dimensions(sections["dimension"])),
+            ("unit", self.dump_units(sections["unit"])),
         ):
             if table:
                 doc.add(name, table)
