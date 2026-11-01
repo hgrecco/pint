@@ -57,7 +57,7 @@ class TestQuantity(QuantityTestCase):
             assert x.magnitude == 4.2
             assert x.units == UnitsContainer(meter=1)
 
-        x = self.Q_(4.2, UnitsContainer(length=1))
+        x = self.Q_(4.2, UnitsContainer(meter=1))
         y = self.Q_(x)
         assert x.magnitude == y.magnitude
         assert x.units == y.units
