@@ -339,6 +339,18 @@ class TestStringProcessor:
         self._test("g", "g")
         self._test("water_60F", "water_60F")
 
+    def test_dot_multiplication(self):
+        self._test("kg.m", "kg*m")
+        self._test("J/(kg.K)", "J/(kg*K)")
+        self._test("(J/kg).K", "(J/kg)*K")
+        self._test("kg.(m/s)", "kg*(m/s)")
+        self._test("m2.kg", "m2*kg")
+        self._test("Ω.m", "Ω*m")
+        # Numbers are not affected.
+        self._test("1.5", "1.5")
+        self._test("1.e3", "1.e3")
+        self._test("1e3.5", "1e3.5")
+
 
 class TestGraph:
     def test_start_not_in_graph(self):
