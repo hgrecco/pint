@@ -950,11 +950,6 @@ def _convert_pretty_exponent(match: re.Match[str]) -> str:
     return f"**({text})"
 
 
-# ``.`` between a unit (or ``)``) and a unit (or ``(``) is multiplication,
-# e.g. ``J/(kg.K)``. Numbers such as ``1.5`` or ``1.e3`` are left alone.
-_dot_mul_re = re.compile(r"((?<![\w.])[^\W\d]\w*|\))\.(?=[^\W\d]|\()")
-
-
 def string_preprocessor(input_string: str) -> str:
     input_string = input_string.replace(",", "")
     input_string = input_string.replace(" per ", "/")
@@ -963,7 +958,6 @@ def string_preprocessor(input_string: str) -> str:
         input_string = a.sub(b, input_string)
 
     input_string = _pretty_exp_re.sub(_convert_pretty_exponent, input_string)
-    input_string = _dot_mul_re.sub(r"\1*", input_string)
     # Replace pretty format characters (multiplication operator)
     input_string = input_string.translate(_pretty_table)
 
