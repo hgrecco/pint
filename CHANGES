@@ -20,6 +20,7 @@ Pint Changelog
 - Remove deprecated APIs: `ureg[...]` (use `ureg(...)` or `parse_expression`), `Quantity.format_babel`/`Unit.format_babel`, and registry `fmt_locale`, `set_fmt_locale` and `default_format` (use `ureg.formatter`)
 - Fix return type of reflected addition (`scalar + Quantity`), which was inferred as `PlainQuantity` instead of `Quantity` (#2545)
 
+
 0.26.2 (2026-10-19)
 -------------------
 
