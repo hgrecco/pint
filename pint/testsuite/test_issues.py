@@ -1963,3 +1963,17 @@ def test_issue2535(func_registry):
         ureg.Quantity(2, d)
     with pytest.raises(TypeError):
         d in ureg
+
+
+@pytest.mark.parametrize(
+    ("expr", "expected"),
+    [
+        ("kg.m", "kg*m"),
+        ("J/(kg.K)", "J/(kg*K)"),
+        ("J/(kg.°C)", "J/(kg*delta_degC)"),
+        ("J/kg.K", "J/kg*K"),
+    ],
+)
+def test_issue2543_dot_multiplication(expr, expected):
+    ureg = UnitRegistry()
+    assert ureg.parse_units(expr) == ureg.parse_units(expected)
