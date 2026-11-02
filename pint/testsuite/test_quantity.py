@@ -1279,6 +1279,8 @@ class TestQuantityBasicMath(QuantityTestCase):
             assert_type(x % y, "Q_[float]")
             assert_type(x**y, "Q_[Any]")  # NOTE: This is a known problem in typeshed
             assert_type(divmod(x, y), "tuple[Q_[float], Q_[float]]")
+            assert_type(1.0 + x, "Q_[float]")
+            assert_type(1.0 - x, "Q_[float]")
             x += y
             x -= y
             x *= y
