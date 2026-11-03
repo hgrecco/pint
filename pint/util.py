@@ -34,7 +34,7 @@ from typing import (
 
 from . import pint_eval
 from ._typing import Scalar
-from .compat import NUMERIC_TYPES
+from .compat import NUMERIC_TYPES, deprecated
 from .errors import DefinitionSyntaxError
 from .pint_eval import build_eval_tree
 
@@ -57,6 +57,10 @@ def _noop[T](x: T) -> T:
     return x
 
 
+@deprecated(
+    "matrix_to_string is deprecated and will be removed in a future release.",
+    category=DeprecationWarning,
+)
 def matrix_to_string(
     matrix: ItMatrix,
     row_headers: Iterable[str] | None = None,
