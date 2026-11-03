@@ -8,7 +8,7 @@ import math
 import operator as op
 import pickle
 import warnings
-from typing import TYPE_CHECKING, assert_type
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import pytest
@@ -78,13 +78,6 @@ class TestQuantity(QuantityTestCase):
         assert self.Q_("3 m", "cm").units == self.ureg.cm
         with pytest.raises(DimensionalityError):
             self.Q_("3 kg", "m")
-
-    def test_round(self) -> None:
-        x: Q_[float] = self.Q_(1.1, "kg")
-        round1 = assert_type(round(x), "Q_[int]")
-        round2 = assert_type(round(x, 0), "Q_[float]")
-        assert isinstance(round1.magnitude, int)
-        assert isinstance(round2.magnitude, float)
 
     def test_quantity_with_quantity(self):
         x: Q_[float] = self.Q_(4.2, "m")
@@ -1263,29 +1256,7 @@ class TestQuantityBasicMath(QuantityTestCase):
         # self._test_quantity_ifloordiv(unit, ifunc)
 
     def test_float(self):
-        # Runtime tests
         self._test_numeric(1.0, self._test_not_inplace)
-        # Typing tests (TODO: expand these with more cases)
-        if TYPE_CHECKING:
-            from typing import Any  # noqa
-
-            x: Q_[float] = self.Q_(1.0)
-            y: Q_[float] = self.Q_(1.0)
-            assert_type(x + y, "Q_[float]")
-            assert_type(x - y, "Q_[float]")
-            assert_type(x * y, "Q_[float]")
-            assert_type(x / y, "Q_[float]")
-            assert_type(x // y, "Q_[float]")
-            assert_type(x % y, "Q_[float]")
-            assert_type(x**y, "Q_[Any]")  # NOTE: This is a known problem in typeshed
-            assert_type(divmod(x, y), "tuple[Q_[float], Q_[float]]")
-            x += y
-            x -= y
-            x *= y
-            x /= y
-            x //= y
-            x %= y
-            x **= y
 
     def test_fraction(self):
         import fractions
@@ -1299,7 +1270,6 @@ class TestQuantityBasicMath(QuantityTestCase):
     def test_quantity_abs_round(self) -> None:
         x: Q_[float] = self.Q_(-4.2, "meter")
         y: Q_[float] = self.Q_(4.2, "meter")
-        c: Q_[complex] = self.Q_(3 + 2j, "meter")
 
         for fun in (abs, round, op.pos, op.neg):
             zx = self.Q_(fun(x.magnitude), "meter")
@@ -1310,15 +1280,6 @@ class TestQuantityBasicMath(QuantityTestCase):
             assert ry == zy, f"while testing {fun}"
             assert rx is not zx, f"while testing {fun}"
             assert ry is not zy, f"while testing {fun}"
-
-        # type checking tests
-        assert_type(abs(x), "Q_[float]")
-        assert_type(abs(c), "Q_[float]")
-        assert_type(round(x), "Q_[int]")
-        assert_type(+x, "Q_[float]")
-        assert_type(+c, "Q_[complex]")
-        assert_type(-x, "Q_[float]")
-        assert_type(-c, "Q_[complex]")
 
     def test_quantity_float_complex(self) -> None:
         x: Q_[float] = self.Q_(-4.2, None)

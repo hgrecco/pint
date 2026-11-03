@@ -203,6 +203,8 @@ class Quantity(
             | opt.CanRAdd[MagnitudeT_co, U],
         ) -> Quantity[U]: ...
 
+        __radd__ = __add__
+
         def __isub__[T: Magnitude, U: Magnitude](
             self: Quantity[opt.CanISub[T, U]], other: Quantity[T] | T
         ) -> Quantity[U]: ...
