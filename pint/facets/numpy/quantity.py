@@ -8,7 +8,6 @@ pint.facets.numpy.quantity
 
 from __future__ import annotations
 
-import datetime
 import functools
 import math
 import warnings
@@ -17,12 +16,14 @@ from typing import Any
 from ..._typing import Magnitude, Shape
 from ...compat import (
     HAS_NUMPY,
-    _to_magnitude,
-    is_duck_array,
     np,
-    np_timedelta64,
 )
-from ...errors import DimensionalityError, PintTypeError, UnitStrippedWarning
+from ...errors import (
+    DimensionalityError,
+    PintTypeError,
+    UndefinedUnitError,
+    UnitStrippedWarning,
+)
 from ...util import UnitsContainer
 from ..plain import PlainQuantity
 from ..plain.qto import _get_compact_base, _get_si_prefixes, _pick_compact_unit
@@ -129,7 +130,7 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
                 UnitStrippedWarning,
                 stacklevel=2,
             )
-        return _to_magnitude(self._magnitude, force_ndarray=True)
+        return self._REGISTRY._into_ndarray_like(self._magnitude, force_ndarray=True)
 
     def clip(self, min=None, max=None, out=None, **kwargs):
         if min is not None:
@@ -230,9 +231,7 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
             # Handle array protocol attributes other than `__array__`
             raise AttributeError(f"Array protocol attribute {item} not available.")
         elif item in HANDLED_UFUNCS or item in self._wrapped_numpy_methods:
-            magnitude_as_duck_array = _to_magnitude(
-                self._magnitude, force_ndarray_like=True
-            )
+            magnitude_as_duck_array = self._REGISTRY._into_ndarray_like(self._magnitude)
             try:
                 attr = getattr(magnitude_as_duck_array, item)
                 return functools.partial(self._numpy_method_wrap, attr)
@@ -256,6 +255,16 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
         try:
             return getattr(self._magnitude, item)
         except AttributeError:
+            prop = getattr(type(self), item, None)
+            if isinstance(prop, property):
+                # The property raised AttributeError to get here; surface an
+                # UndefinedUnitError (an AttributeError subclass) from it.
+                try:
+                    prop.fget(self)
+                except UndefinedUnitError as exc:
+                    raise exc from None
+                except AttributeError:
+                    pass
             raise AttributeError(
                 "Neither Quantity object nor its magnitude ({}) "
                 "has attribute '{}'".format(self._magnitude, item)
@@ -274,12 +283,23 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
 
     def __setitem__(self, key, value):
         try:
-            # If we're dealing with a masked single value or a nan, set it
+            # Assign masked single values and bare NaNs directly.
             if (
                 isinstance(self._magnitude, np.ma.MaskedArray)
                 and np.ma.is_masked(value)
                 and getattr(value, "size", 0) == 1
-            ) or (getattr(value, "ndim", 0) == 0 and math.isnan(value)):
+            ) or (
+                not isinstance(value, PlainQuantity)
+                and (
+                    (getattr(value, "ndim", 0) == 0 and math.isnan(value))
+                    or (
+                        isinstance(value, np.ndarray)
+                        and value.size > 0
+                        and value.dtype.kind in "fc"
+                        and np.isnan(value).all()
+                    )
+                )
+            ):
                 self._magnitude[key] = value
                 return
         except TypeError:
@@ -318,41 +338,6 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
                 f"Neither Quantity object nor its magnitude ({self._magnitude}) "
                 "supports indexing"
             ) from exc
-
-    def _is_timedelta(self, value) -> bool:
-        return (
-            super()._is_timedelta(value)
-            or isinstance(value, np_timedelta64)
-            or (
-                not isinstance(value, PlainQuantity)
-                and is_duck_array(value)
-                and value.dtype.type == np_timedelta64
-            )
-        )
-
-    def _convert_timedelta(self, value: Any) -> tuple[float, str]:
-        """Convert a timedelta object to magnitude and unit string."""
-        if isinstance(value, datetime.timedelta):
-            return super()._convert_timedelta(value)
-
-        _dtype_to_unit = {
-            "timedelta64[Y]": "year",
-            "timedelta64[M]": "month",
-            "timedelta64[W]": "week",
-            "timedelta64[D]": "day",
-            "timedelta64[h]": "hour",
-            "timedelta64[m]": "minute",
-            "timedelta64[s]": "s",
-            "timedelta64[ms]": "ms",
-            "timedelta64[us]": "us",
-            "timedelta64[ns]": "ns",
-            "timedelta64[ps]": "ps",
-            "timedelta64[fs]": "fs",
-            "timedelta64[as]": "as",
-        }
-        if isinstance(value, np_timedelta64) or value.dtype.type == np_timedelta64:
-            return value.astype(float), _dtype_to_unit[str(value.dtype)]
-        raise TypeError(f"Cannot convert {value!r} to seconds.")
 
     def to_compact(
         self, unit: UnitsContainer | None = None, maximumPrefix: bool = False
@@ -406,6 +391,9 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
             power = np.ceil(np.log10(np.abs(magnitude)) / float(unit_power) / 3) * 3
 
         finite_powers = power[np.isfinite(power)]
+        if finite_powers.size == 0:
+            # Only zeros, nan and inf: there is no prefix to pick.
+            return self
         pivot = (
             finite_powers[np.argmax(np.abs(finite_powers))]
             if maximumPrefix

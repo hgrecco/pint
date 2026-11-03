@@ -1077,7 +1077,8 @@ class TestRegistry(QuantityTestCase):
             d("bla = 3.2 meter = inch")
             d("myk- = 1000 = kilo-")
 
-        assert len(caplog.records) == 5
+        redefinitions = [r for r in caplog.records if "Redefining" in r.getMessage()]
+        assert len(redefinitions) == 5
 
     def test_convert_parse_str(self):
         ureg = self.ureg

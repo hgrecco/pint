@@ -76,6 +76,11 @@ def _pre(tokenizer, input_text: str, preprocess: bool = False) -> str:
         ("3 kg + 5", "((3 kg) + 5)"),
         ("(5 % 2) m", "((5 % 2) m)"),  # mod operator
         ("(5 // 2) m", "((5 // 2) m)"),  # floordiv operator
+        # dot as multiplication
+        ("kg.m", "(kg * m)"),
+        ("J/(kg.K)", "(J / (kg * K))"),
+        ("J/kg.K", "((J / kg) * K)"),
+        ("1.5 m", "(1.5 m)"),
     ),
 )
 def test_build_eval_tree(tokenizer, input_text: str, parsed: str):

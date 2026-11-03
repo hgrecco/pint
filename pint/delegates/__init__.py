@@ -10,8 +10,14 @@ Defines methods and classes to handle autonomous tasks.
 
 from __future__ import annotations
 
-from . import txt_defparser
+from . import toml_defparser, txt_defparser
 from .base_defparser import ParserConfig, build_disk_cache_class
 from .formatter import Formatter
 
-__all__ = ["txt_defparser", "ParserConfig", "build_disk_cache_class", "Formatter"]
+__all__ = [
+    "txt_defparser",
+    "toml_defparser",
+    "ParserConfig",
+    "build_disk_cache_class",
+    "Formatter",
+]

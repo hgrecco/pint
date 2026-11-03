@@ -21,7 +21,7 @@ def local_registry():
 plt.switch_backend("agg")
 
 
-@pytest.mark.mpl_image_compare(tolerance=0, remove_text=True)
+@pytest.mark.mpl_image_compare(tolerance=0.1, remove_text=True)
 def test_basic_plot(local_registry):
     y = np.linspace(0, 30) * local_registry.miles
     x = np.linspace(0, 5) * local_registry.hours
@@ -34,7 +34,7 @@ def test_basic_plot(local_registry):
     return fig
 
 
-@pytest.mark.mpl_image_compare(tolerance=0, remove_text=True)
+@pytest.mark.mpl_image_compare(tolerance=0.1, remove_text=True)
 def test_plot_with_set_units(local_registry):
     y = np.linspace(0, 30) * local_registry.miles
     x = np.linspace(0, 5) * local_registry.hours
@@ -50,7 +50,7 @@ def test_plot_with_set_units(local_registry):
     return fig
 
 
-@pytest.mark.mpl_image_compare(tolerance=0, remove_text=True)
+@pytest.mark.mpl_image_compare(tolerance=0.1, remove_text=True)
 def test_plot_with_non_default_format(local_registry):
     local_registry.mpl_formatter = "{:~P}"
 

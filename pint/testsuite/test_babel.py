@@ -23,13 +23,24 @@ def test_format(func_registry):
     ureg.load_definitions(os.path.join(dirname, "../xtranslated.txt"))
 
     distance = 24.1 * ureg.meter
-    assert distance.format_babel(locale="fr_FR", length="long") == "24,1 mètres"
+    assert (
+        ureg.formatter.format_quantity_babel(distance, locale="fr_FR", length="long")
+        == "24,1 mètres"
+    )
     time = 8.1 * ureg.second
-    assert time.format_babel(locale="fr_FR", length="long") == "8,1 secondes"
-    assert time.format_babel(locale="ro_RO", length="short") == "8,1 s"
+    assert (
+        ureg.formatter.format_quantity_babel(time, locale="fr_FR", length="long")
+        == "8,1 secondes"
+    )
+    assert (
+        ureg.formatter.format_quantity_babel(time, locale="ro_RO", length="short")
+        == "8,1 s"
+    )
     acceleration = distance / time**2
     assert (
-        acceleration.format_babel(spec=".3nP", locale="fr_FR", length="long")
+        ureg.formatter.format_quantity_babel(
+            acceleration, spec=".3nP", locale="fr_FR", length="long"
+        )
         == "0,367 mètre par seconde²"
     )
     mks = ureg.get_system("mks")
@@ -43,17 +54,22 @@ def test_registry_locale():
     ureg.load_definitions(os.path.join(dirname, "../xtranslated.txt"))
 
     distance = 24.1 * ureg.meter
-    assert distance.format_babel(length="long") == "24,1 mètres"
+    assert (
+        ureg.formatter.format_quantity_babel(distance, length="long") == "24,1 mètres"
+    )
     time = 8.1 * ureg.second
-    assert time.format_babel(length="long") == "8,1 secondes"
-    assert time.format_babel(locale="ro_RO", length="short") == "8,1 s"
+    assert ureg.formatter.format_quantity_babel(time, length="long") == "8,1 secondes"
+    assert (
+        ureg.formatter.format_quantity_babel(time, locale="ro_RO", length="short")
+        == "8,1 s"
+    )
     acceleration = distance / time**2
     assert (
-        acceleration.format_babel(spec=".3nC", length="long")
+        ureg.formatter.format_quantity_babel(acceleration, spec=".3nC", length="long")
         == "0,367 mètre/seconde**2"
     )
     assert (
-        acceleration.format_babel(spec=".3nP", length="long")
+        ureg.formatter.format_quantity_babel(acceleration, spec=".3nP", length="long")
         == "0,367 mètre par seconde²"
     )
     mks = ureg.get_system("mks")
@@ -64,17 +80,17 @@ def test_registry_locale():
 def test_unit_format_babel():
     ureg = UnitRegistry(fmt_locale="fr_FR")
     volume = ureg.Unit("ml")
-    assert volume.format_babel() == "millilitre"
+    assert ureg.formatter.format_unit_babel(volume) == "millilitre"
 
     ureg.formatter.default_format = "~"
-    assert volume.format_babel() == "ml"
+    assert ureg.formatter.format_unit_babel(volume) == "ml"
 
     dimensionless_unit = ureg.Unit("")
-    assert dimensionless_unit.format_babel() == ""
+    assert ureg.formatter.format_unit_babel(dimensionless_unit) == ""
 
-    ureg.set_fmt_locale(None)
+    ureg.formatter.set_locale(None)
     with pytest.raises(ValueError):
-        volume.format_babel()
+        ureg.formatter.format_unit_babel(volume)
 
 
 @helpers.requires_babel()
@@ -82,7 +98,7 @@ def test_no_registry_locale(func_registry):
     ureg = func_registry
     distance = 24.0 * ureg.meter
     with pytest.raises(Exception):
-        distance.format_babel()
+        ureg.formatter.format_quantity_babel(distance)
 
 
 @helpers.requires_babel(["fr_FR"])
@@ -95,13 +111,13 @@ def test_str(func_registry):
     assert "%s" % d == s
     assert f"{d}" == s
 
-    ureg.set_fmt_locale("fr_FR")
+    ureg.formatter.set_locale("fr_FR")
     s = "24,1 mètres"
     assert str(d) == s
     assert "%s" % d == s
     assert f"{d}" == s
 
-    ureg.set_fmt_locale(None)
+    ureg.formatter.set_locale(None)
     s = "24.1 meter"
     assert str(d) == s
     assert "%s" % d == s
@@ -115,13 +131,13 @@ def test_unit_str_uses_registry_locale(func_registry):
     u = ureg.Unit("metre")
     assert str(u) == "meter"
 
-    ureg.set_fmt_locale("fr_FR")
+    ureg.formatter.set_locale("fr_FR")
     assert str(u) == "mètre"
     assert f"{u}" == "mètre"
     assert f"{u:~}" == "m"
     assert repr(u) == 'Unit("meter")'
 
-    ureg.set_fmt_locale(None)
+    ureg.formatter.set_locale(None)
     assert str(u) == "meter"
 
 

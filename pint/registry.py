@@ -32,7 +32,6 @@ from typing import (
 from typing_extensions import TypeVar
 
 from . import facets, registry_helpers
-from .compat import deprecated
 from .util import logger, pi_theorem
 
 if TYPE_CHECKING:
@@ -560,6 +559,7 @@ class UnitRegistry(
     def __init__(
         self,
         filename: Iterable[str] | str | pathlib.Path | None = "",
+        *,
         force_ndarray: bool = False,
         force_ndarray_like: bool = False,
         default_as_delta: bool = True,
@@ -704,13 +704,6 @@ class ApplicationRegistry:
 
     def __dir__(self):
         return dir(self._registry)
-
-    @deprecated(
-        "Calling the getitem method from an ApplicationRegistry will be removed in future versions of pint.\n"
-        "use `parse_expression` method or use the registry as a callable."
-    )
-    def __getitem__(self, item):
-        return self._registry.parse_expression(item)
 
     def __call__(self, *args, **kwargs):
         return self._registry(*args, **kwargs)

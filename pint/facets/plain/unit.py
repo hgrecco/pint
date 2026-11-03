@@ -17,7 +17,7 @@ from numbers import Number
 from typing import TYPE_CHECKING, Any, Literal, Self, cast, overload
 
 from ..._typing import Magnitude, UnitLike
-from ...compat import NUMERIC_TYPES, deprecated
+from ...compat import NUMERIC_TYPES
 from ...errors import DimensionalityError
 from ...util import PrettyIPython, SharedRegistryObject, UnitsContainer
 
@@ -51,13 +51,6 @@ class PlainUnit(PrettyIPython, SharedRegistryObject):
     def __deepcopy__(self, memo) -> Self:
         ret = self.__class__(copy.deepcopy(self._units, memo))
         return ret
-
-    @deprecated(
-        "This function will be removed in future versions of pint.\n"
-        "Please use `ureg.formatter.format_unit_babel` instead."
-    )
-    def format_babel(self, spec: str = "", **kwspec: Any) -> str:
-        return self._REGISTRY.formatter.format_unit_babel(self, spec, **kwspec)
 
     def __format__(self, spec: str) -> str:
         return self._REGISTRY.formatter.format_unit(self, spec)

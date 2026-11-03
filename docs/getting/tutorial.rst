@@ -422,7 +422,7 @@ and HTML representations:
 
 .. doctest::
 
-   >>> accel = 1.3 * ureg['meter/second**2']
+   >>> accel = 1.3 * ureg('meter/second**2')
    >>> # Pretty print
    >>> 'The pretty representation is {:P}'.format(accel)
    'The pretty representation is 1.3 meter/second²'

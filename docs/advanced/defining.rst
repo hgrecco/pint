@@ -145,6 +145,39 @@ Same for aliases and derived dimensions:
    program ends.
 
 
+Redefining units
+----------------
+
+Defining a unit that already exists replaces it, and logs a warning unless the
+registry was created with ``on_redefinition="ignore"`` (``"raise"`` raises a
+:class:`~pint.RedefinitionError` instead). Conversions use the new definition
+straight away, including for units derived from it:
+
+.. doctest::
+
+   >>> ureg2 = UnitRegistry(on_redefinition="ignore")
+   >>> print(ureg2.Quantity(1, "lb").to("kg"))
+   0.4535923... kilogram
+   >>> ureg2.define("pound = 0.5 kg = lb")
+   >>> print(ureg2.Quantity(1, "lb").to("kg"))
+   0.5 kilogram
+   >>> print(ureg2.Quantity(1, "ton").to("kg"))
+   1000.0 kilogram
+
+Each redefinition rebuilds the registry's cache. To redefine many units, pass
+``rebuild_cache=False`` to ``define`` or ``load_definitions`` and the cache is
+rebuilt once, by the next call without it:
+
+.. doctest::
+
+   >>> ureg2.define("pound = 0.4 kg = lb", rebuild_cache=False)
+   >>> ureg2.define("ounce = 0.025 kg = oz")
+   >>> print(ureg2.Quantity(1, "lb").to("kg"))
+   0.4 kilogram
+
+Until then, conversions may still use the old definitions.
+
+
 Units with constants
 --------------------
 

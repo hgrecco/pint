@@ -24,6 +24,7 @@ The registry contains the following important methods:
 from __future__ import annotations
 
 import copy
+import datetime
 import functools
 import inspect
 import itertools
@@ -34,15 +35,17 @@ from collections.abc import Callable, Generator, Iterable, Iterator
 from decimal import Decimal
 from fractions import Fraction
 from math import isnan
+from numbers import Number
 from token import NAME, NUMBER
 from tokenize import TokenInfo
+from types import NotImplementedType
 from typing import (
     TYPE_CHECKING,
     Any,
+    cast,
 )
 
 if TYPE_CHECKING:
-    from ...compat import Locale
     from ..context import Context
 
     # from ..._typing import Quantity, Unit
@@ -60,7 +63,7 @@ from ..._typing import (
     Scalar,
     UnitLike,
 )
-from ...compat import _to_magnitude, coerce_scalar, deprecated
+from ...compat import coerce_scalar, is_duck_array
 from ...errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
@@ -164,15 +167,23 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 ):
     """Base class for all registries.
 
-    Capabilities:
+    A registry is responsible for input normalization (including string parsing):
+    as a result, it is also the source of truth for unit definitions
+    and, more broadly, pint's configuration.
 
+    Therefore, every interaction between objects of different registries
+    is not intended to work and will result in an error.
+
+    Capabilities implemented here:
+
+    - Normalize magnitude values.
     - Register units, prefixes, and dimensions, and their relations.
     - Convert between units.
     - Find dimensionality of a unit.
     - Parse units with prefix and/or suffix.
     - Parse expressions.
     - Parse a definition file.
-    - Allow extending the definition file parser by registering @ directives.
+    - Allow extending the definition file parser by registering :text:`@` directives.
 
     Parameters
     ----------
@@ -217,6 +228,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
     def __init__(
         self,
         filename: Iterable[str] | str | pathlib.Path | None = "",
+        *,
         force_ndarray: bool = False,
         force_ndarray_like: bool = False,
         on_redefinition: str = "warn",
@@ -247,6 +259,9 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 
         self._def_parser = delegates.txt_defparser.DefParser(
             delegates.ParserConfig(non_int_type), diskcache=self._diskcache
+        )
+        self._toml_parser = delegates.toml_defparser.TomlParser(
+            delegates.ParserConfig(non_int_type)
         )
 
         self.formatter = delegates.Formatter(self)
@@ -318,6 +333,9 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         #: Map contexts to RegistryCache
         self._cache = RegistryCache()
 
+        #: Set when a definition is overwritten after initialization.
+        self._cache_stale = False
+
         self._initialized = False
 
     def _init_dynamic_classes(self) -> None:
@@ -343,12 +361,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
     def _register_adder[T](
         self,
         definition_class: type[T],
-        adder_func: Callable[
-            [
-                T,
-            ],
-            None,
-        ],
+        adder_func: Callable[[T], None],
     ) -> None:
         """Register a block definition."""
         self._adders[definition_class] = adder_func
@@ -362,41 +375,43 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         self._register_adder(DimensionDefinition, self._add_dimension)
         self._register_adder(DerivedDimensionDefinition, self._add_derived_dimension)
 
-    def __deepcopy__(self, memo) -> type[Self]:
+    def __deepcopy__(self, memo: dict[int, Any] | None = None) -> Self:
         new = object.__new__(type(self))
         new.__dict__ = copy.deepcopy(self.__dict__, memo)
         new._init_dynamic_classes()
         return new
 
-    def __getattr__(self, item: str) -> UnitT:
+    def __getattr__(self, item: str, /) -> UnitT:
         getattr_maybe_raise(self, item)
 
         # self.Unit will call parse_units
         return self.Unit(item)
 
-    @deprecated(
-        "Calling the getitem method from a UnitRegistry will be removed in future versions of pint.\n"
-        "use `parse_expression` method or use the registry as a callable."
-    )
-    def __getitem__(self, item: str) -> UnitT:
-        return self.parse_expression(item)
-
-    def __contains__(self, item: str | UnitT) -> bool:
-        """Support checking prefixed units with the `in` operator"""
-        if isinstance(item, self.Unit):
-            item = str(item)
-        try:
-            self.__getattr__(item)
+    def __contains__(self, item: str | UnitT, /) -> bool:
+        """Support checking prefixed units with the `in` operator."""
+        if isinstance(item, str):
+            try:
+                self.parse_units_as_container(item)
+                return True
+            except UndefinedUnitError:
+                return False
+        elif isinstance(item, self.Unit):
+            if item._REGISTRY is not self:
+                # maybe we can also raise an error here
+                return False
+            # NOTE: this is guaranteed by an invariant of Unit. See `self._into_unit()` for details
             return True
-        except UndefinedUnitError:
-            return False
+        else:
+            raise TypeError(
+                f"Unsupported operation: `UnitRegistry.__contains__(<instance of {type(item)}>)`."
+            )
 
-    def __dir__(self) -> list[str]:
+    def __dir__(self, /) -> list[str]:
         #: Calling dir(registry) gives all units, methods, and attributes.
         #: Also used for autocompletion in IPython.
         return list(self._units.keys()) + list(object.__dir__(self))
 
-    def __iter__(self) -> Iterator[str]:
+    def __iter__(self, /) -> Iterator[str]:
         """Allows for listing all units in registry with `list(ureg)`.
 
         Returns
@@ -406,55 +421,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         return iter(sorted(self._units.keys()))
 
     @property
-    @deprecated(
-        "This function will be removed in future versions of pint.\n"
-        "Use ureg.formatter.fmt_locale"
-    )
-    def fmt_locale(self) -> Locale | None:
-        return self.formatter.locale
-
-    @fmt_locale.setter
-    @deprecated(
-        "This function will be removed in future versions of pint.\n"
-        "Use ureg.formatter.set_locale"
-    )
-    def fmt_locale(self, loc: str | None):
-        self.formatter.set_locale(loc)
-
-    @deprecated(
-        "This function will be removed in future versions of pint.\n"
-        "Use ureg.formatter.set_locale"
-    )
-    def set_fmt_locale(self, loc: str | None) -> None:
-        """Change the locale used by default by `format_babel`.
-
-        Parameters
-        ----------
-        loc : str or None
-            None` (do not translate), 'sys' (detect the system locale) or a locale id string.
-        """
-
-        self.formatter.set_locale(loc)
-
-    @property
-    @deprecated(
-        "This function will be removed in future versions of pint.\n"
-        "Use ureg.formatter.default_format"
-    )
-    def default_format(self) -> str:
-        """Default formatting string for quantities."""
-        return self.formatter.default_format
-
-    @default_format.setter
-    @deprecated(
-        "This function will be removed in future versions of pint.\n"
-        "Use ureg.formatter.default_format"
-    )
-    def default_format(self, value: str) -> None:
-        self.formatter.default_format = value
-
-    @property
-    def cache_folder(self) -> pathlib.Path | None:
+    def cache_folder(self, /) -> pathlib.Path | None:
         if self._diskcache:
             return self._diskcache.cache_folder
         return None
@@ -473,13 +440,17 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
     # Extending the registry with new unit definitions
     ############
 
-    def define(self, definition: str | type) -> None:
+    def define(self, definition: str | type, rebuild_cache: bool = True) -> None:
         """Add unit to the registry.
 
         Parameters
         ----------
         definition : str or Definition
             a dimension, unit or prefix definition.
+        rebuild_cache : bool
+            if False, delay rebuilding the cache after a redefinition until the
+            next call to `define` or `load_definitions` that rebuilds it.
+            (Default value = True)
         """
 
         if isinstance(definition, str):
@@ -489,6 +460,15 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 self._helper_dispatch_adder(definition)
         else:
             self._helper_dispatch_adder(definition)
+
+        if rebuild_cache:
+            self._rebuild_cache_if_stale()
+
+    def _rebuild_cache_if_stale(self) -> None:
+        """Rebuild the cache if a definition was overwritten since it was built."""
+        if self._cache_stale:
+            self._cache_stale = False
+            self._build_cache()
 
     ############
     # Adders
@@ -552,6 +532,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 raise RedefinitionError(key, type(value))
             elif self._on_redefinition == "warn":
                 logger.warning(f"Redefining '{key}' ({type(value)})")
+            if self._initialized:
+                self._cache_stale = True
 
         target_dict[key] = value
         if casei_target_dict is not None:
@@ -591,7 +573,10 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         self._helper_adder(definition, self._units, self._units_casei)
 
     def load_definitions(
-        self, file: Iterable[str] | str | pathlib.Path, is_resource: bool = False
+        self,
+        file: Iterable[str] | str | pathlib.Path,
+        is_resource: bool = False,
+        rebuild_cache: bool = True,
     ):
         """Add units and prefixes defined in a definition text file.
 
@@ -602,16 +587,29 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         is_resource :
             used to indicate that the file is a resource file
             and therefore should be loaded from the package. (Default value = False)
+        rebuild_cache :
+            if False, delay rebuilding the cache after a redefinition until the
+            next call to `define` or `load_definitions` that rebuilds it.
+            (Default value = True)
         """
 
         if isinstance(file, (list, tuple)):
             # TODO: this hack was to keep it backwards compatible.
             parsed_project = self._def_parser.parse_string("\n".join(file))
+            definitions = self._def_parser.iter_parsed_project(parsed_project)
+        elif str(file).lower().endswith(".toml"):
+            # the disk cache is keyed on parsed text files, so TOML skips it
+            parsed_project = None
+            definitions = self._toml_parser.parse_file(file)
         else:
             parsed_project = self._def_parser.parse_file(file)
+            definitions = self._def_parser.iter_parsed_project(parsed_project)
 
-        for definition in self._def_parser.iter_parsed_project(parsed_project):
+        for definition in definitions:
             self._helper_dispatch_adder(definition)
+
+        if rebuild_cache:
+            self._rebuild_cache_if_stale()
 
         return parsed_project
 
@@ -773,6 +771,9 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 try:
                     reg = self._dimensions[key]
                 except KeyError:
+                    # "[]" is dimensionless even if no unit was defined as "= []".
+                    if key == "[]":
+                        continue
                     raise ValueError(
                         f"{key} is not defined as dimension in the pint UnitRegistry"
                     )
@@ -1362,7 +1363,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             value = units[name]
             if not cname:
                 continue
-            if as_delta and (many or (not many and value != 1)):
+            if as_delta and (many or value != 1):
                 definition = self._units[cname]
                 # Logarithmic units have no delta counterpart.
                 if not (definition.is_multiplicative or definition.is_logarithmic):
@@ -1435,8 +1436,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         Parameters
         ----------
         input_string
-
-        pattern_string:
+            The string to parse.
+        pattern
             The regex parse string
         case_sensitive, optional
             If true, a case sensitive matching of the unit name will be done in the registry.
@@ -1534,19 +1535,36 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         """Convenience method that converts the argument into units.
 
         Intended for use by the `Unit` and `Quantity` constructors.
+
+        This function's return value is guaranteed to only contain units that are registered in `self`.
         """
         if units is None:
             return self.UnitsContainer()
-        if isinstance(units, (UnitsContainer, UnitDefinition)):
+        elif isinstance(units, PlainUnit):
+            if units._REGISTRY is not self:
+                raise ValueError(
+                    "Pint explicitly disallows mixing units from different registries, "
+                    "because they are not guaranteed to have the same meaning."
+                )
+            # NOTE: since it's a PlainUnit invariant, we know these units are valid for this registry,
+            #   so we can return them as-is without further validation.
+            return units._units
+        elif isinstance(units, UnitsContainer):
+            for u in units:
+                # this will raise `UndefinedUnitError` if the unit is not defined here
+                self.get_name(u)
             return units
         elif isinstance(units, str):
-            return self.parse_units(units)._units
-        elif isinstance(units, PlainUnit):
-            return units._units
+            return self.parse_units_as_container(units)
         elif isinstance(units, PlainQuantity):
+            if units._REGISTRY is not self:
+                raise ValueError(
+                    "Pint explicitly disallows mixing units from different registries, "
+                    "because they are not guaranteed to have the same meaning."
+                )
             if units.magnitude != 1:
                 logger.warning(
-                    "Treating a non-unity quantity as units: the magnitude has been ignored!"
+                    "Treating a non-unity quantity as pure units: the magnitude has been ignored!"
                     # specialized warning message for maintaining backwards compatibility
                     if target_class_name is None
                     else f"Creating new {target_class_name} using a non unity PlainQuantity as units."
@@ -1574,6 +1592,10 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             if units is None:
                 raise TypeError("Expected a bare magnitude, found a quantity.")
             return value.to(units)._magnitude
+        elif isinstance(value, PlainUnit):
+            if units is None:
+                raise TypeError("Expected a magnitude, found a unit.")
+            return (1 * value).to(units)._magnitude
         elif isinstance(value, str):
             if not parse_strings:
                 raise TypeError(
@@ -1590,18 +1612,52 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 return self._into_magnitude(quantity, units=units)
             else:
                 return parsed.scale
-        else:
-            # TODO(#2427 follow-up):
-            #   Make `_to_magnitude` a `GenericPlainRegistry` method as well
-            #   and subclass it in `GenericNumpyRegistry` for numpy-specific magnitude
-            #   support (e.g., `list` -> `np.ndarray` conversions).
-            # This will allow to better isolate numpy-specific code in the numpy facet.
-            return _to_magnitude(value, self.force_ndarray, self.force_ndarray_like)
+        # we can finally convert the magnitude the way we wish
+        magnitude = self._normalize_magnitude(value)
+        if magnitude is NotImplemented:
+            return cast(Magnitude, value)  # will be treated as a scalar
+        return magnitude
 
-    # TODO(#2427 follow-up):
-    #   Move `PlainQuantity._is_timedelta` and `PlainQuantity._convert_timedelta` here
-    #   for consistency and correctness (those methods shouldn't have access to existing
-    #   magnitude/units because they're meant to *create* them...)
+    def _normalize_magnitude(self, value: object, /) -> Magnitude | NotImplementedType:
+        """Try and convert the given value as a pure magnitude.
+
+        This method should be implemented by subclasses that wish to extend pint's magnitude normalization,
+        according to the following behavioral assumptions:
+        - if the value is unknown to the implementer, this method should return :class:`NotImplementedType`:
+            this is faster than an exception and allows other subclasses to handle the same value;
+        - if the value is not interpretable as a magnitude, this method should raise `TypeError`;
+        - if the value is malformed or invalid, this method should raise any other error (e.g. `ValueError`).
+
+        The implementation should call `value = super()._normalize_magnitude(value)` for the unhandled cases,
+          so that all subclasses get a chance of handling the value.
+        """
+        if isinstance(value, bool):
+            raise TypeError(
+                "Pint does not support boolean magnitudes because they are confusing: "
+                "please call `int()` or `float()` before interpreting the value as a magnitude."
+            )
+        elif isinstance(value, Number) or is_duck_array(value):
+            return cast(Magnitude, value)
+        # handle clearly meaningless or unintended values
+        elif isinstance(value, (dict, set, datetime.datetime, datetime.timedelta)):
+            raise TypeError(
+                f"Pint explicitly does not support {type(value)} magnitudes."
+            )
+        elif value is None:
+            raise TypeError(
+                "Pint attempted to construct a quantity with `None` as a magnitude! "
+                "This is likely unintentional, please double-check your code and make sure "
+                "you are not passing `None` as a magnitude, either directly to the `Quantity` "
+                "constructor or as an operand of an arithmetic operation."
+            )
+        return NotImplemented
+
+    def _as_magnitude_and_units(self, value: object) -> tuple[object, str] | None:
+        """Return the magnitude and units of a value that carries its own units
+        (e.g. a timedelta), or None for any other value."""
+        if isinstance(value, datetime.timedelta):
+            return value.total_seconds(), "seconds"
+        return None
 
     ############
     # Other utilities
