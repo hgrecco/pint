@@ -402,6 +402,19 @@ class TestGraph:
 
 
 class TestMatrix:
+    @pytest.mark.parametrize(
+        "row_headers, expected",
+        [
+            (["r1"], "\ta\tb\nr1\t1\t2\n\t3\t4"),
+            (iter(["r1"]), "\ta\tb\nr1\t1\t2\n\t3\t4"),
+            (iter([]), "\ta\tb\n\t1\t2\n\t3\t4"),
+            (["r1", "r2", "unused"], "\ta\tb\nr1\t1\t2\nr2\t3\t4"),
+        ],
+    )
+    def test_matrix_to_string_unequal_row_headers(self, row_headers, expected):
+        matrix = (iter(row) for row in [[1, 2], [3, 4]])
+        assert matrix_to_string(matrix, row_headers, ["a", "b"]) == expected
+
     def test_matrix_to_string(self):
         assert (
             matrix_to_string([[1, 2], [3, 4]], row_headers=None, col_headers=None)

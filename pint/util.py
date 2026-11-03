@@ -77,6 +77,7 @@ def matrix_to_string(
     row_headers
         An iterable of strings to serve as row headers.
         (default = None, meaning no row headers are printed.)
+        Missing row headers are left empty; extra headers are ignored.
     col_headers
         An iterable of strings to serve as column headers.
         (default = None, meaning no col headers are printed.)
@@ -93,9 +94,10 @@ def matrix_to_string(
     if col_headers:
         ret.append(("\t" if row_headers else "") + "\t".join(col_headers))
     if row_headers:
+        headers = iter(row_headers)
         ret += [
-            rh + "\t" + "\t".join(fmtfun(f) for f in row)
-            for rh, row in zip(row_headers, matrix)
+            next(headers, "") + "\t" + "\t".join(fmtfun(f) for f in row)
+            for row in matrix
         ]
     else:
         ret += ["\t".join(fmtfun(f) for f in row) for row in matrix]
