@@ -12,7 +12,7 @@ import itertools
 import numbers
 import re
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from ... import errors
@@ -35,6 +35,8 @@ class Relation:
     #: Equation connecting both dimensionalities from which the tranformation
     #: will be built.
     equation: str
+    #: source text of the relation, empty if not read from a definitions file
+    value_text: str = field(default="", kw_only=True, compare=False)
 
     # Instead of defining __post_init__ here,
     # it will be added to the container class
@@ -97,6 +99,10 @@ class ContextDefinition(errors.WithDefErr):
     defaults: dict[str, numbers.Number]
     relations: tuple[Relation, ...]
     redefinitions: tuple[UnitDefinition, ...]
+    #: source text of the defaults, by name
+    defaults_text: dict[str, str] = field(
+        default_factory=dict, kw_only=True, compare=False
+    )
 
     @property
     def variables(self) -> set[str]:

@@ -224,19 +224,21 @@ class TomlParser:
             self._number(d["value"]),
             d.get("symbol"),
             tuple(d.get("aliases", ())),
+            value_text=str(d["value"]),
         )
 
     def parse_dimension(self, name: str, d: dict[str, Any]):
         return definitions.DerivedDimensionDefinition(
-            f"[{name}]", self._default_config.to_dimension_container(d["value"])
+            f"[{name}]",
+            self._default_config.to_dimension_container(d["value"]),
+            value_text=d["value"],
         )
 
     def parse_unit(self, name: str, d: dict[str, Any]):
-        modifiers = {
-            key: self._number(d[key])
-            for key in ("offset", "logbase", "logfactor")
-            if key in d
+        modifiers_text = {
+            key: str(d[key]) for key in ("offset", "logbase", "logfactor") if key in d
         }
+        modifiers = {key: self._number(text) for key, text in modifiers_text.items()}
         scaled = self._default_config.to_scaled_units_container(str(d["value"]))
         return definitions.UnitDefinition(
             name,
@@ -244,6 +246,8 @@ class TomlParser:
             tuple(d.get("aliases", ())),
             Converter.from_arguments(scale=scaled.scale, **modifiers),
             definitions.UnitsContainer(scaled),
+            value_text=str(d["value"]),
+            modifiers_text=modifiers_text,
         )
 
     def parse_group(self, d: dict[str, Any]):
@@ -268,14 +272,18 @@ class TomlParser:
         source = self._default_config.to_dimension_container(source)
         destination = self._default_config.to_dimension_container(destination)
         if arrow == "<->":
-            return BidirectionalRelation(source, destination, equation.strip())
-        return ForwardRelation(source, destination, equation.strip())
+            return BidirectionalRelation(
+                source, destination, equation.strip(), value_text=text
+            )
+        return ForwardRelation(source, destination, equation.strip(), value_text=text)
 
     def parse_context(self, d: dict[str, Any]):
+        defaults_text = {k: str(v) for k, v in d.get("defaults", {}).items()}
         return ContextDefinition(
             d["name"],
             tuple(d.get("aliases", ())),
-            {k: self._number(v) for k, v in d.get("defaults", {}).items()},
+            {k: self._number(text) for k, text in defaults_text.items()},
             tuple(self.parse_relation(r) for r in d.get("relations", ())),
             tuple(self.parse_unit(k, v) for k, v in d.get("redefinitions", {}).items()),
+            defaults_text=defaults_text,
         )
