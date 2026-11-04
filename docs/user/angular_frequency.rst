@@ -74,6 +74,15 @@ Since pint treats angle quantities as `dimensionless`, it allows conversions bet
     >>> angular_frequency.to('Hz')
     Quantity(6.28318531, "hertz")
 
+Pint emits an ``AngularFrequencyWarning`` for such conversions. If the conversion is
+intended, the warning can be silenced with:
+
+.. code-block:: python
+
+    >>> import warnings
+    >>> import pint
+    >>> warnings.filterwarnings("ignore", category=pint.AngularFrequencyWarning)
+
 The SI BIPM Brochure (Bureau International des Poids et Mesures) states:
 
 .. note::

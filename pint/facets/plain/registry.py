@@ -30,6 +30,7 @@ import inspect
 import itertools
 import pathlib
 import re
+import warnings
 from collections import defaultdict
 from collections.abc import Callable, Generator, Iterable, Iterator
 from decimal import Decimal
@@ -65,6 +66,8 @@ from ..._typing import (
 )
 from ...compat import coerce_scalar, is_duck_array
 from ...errors import (
+    ANGULAR_FREQUENCY_DOCS_HTML,
+    AngularFrequencyWarning,
     DimensionalityError,
     OffsetUnitCalculusError,
     RedefinitionError,
@@ -94,6 +97,8 @@ from .definitions import (
     UnitDefinition,
 )
 from .objects import PlainQuantity, PlainUnit
+
+_PINT_DIR = str(pathlib.Path(__file__).parents[2])
 
 _BLOCK_RE = re.compile(r"[ (]")
 
@@ -1184,6 +1189,8 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         if isinstance(factor, DimensionalityError):
             raise factor
 
+        self._warn_angular_frequency(src, dst)
+
         # Decimal/Fraction magnitudes can't mix with float — coerce to match.
         factor = coerce_scalar(value, factor)
 
@@ -1193,6 +1200,22 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             value = value * factor
 
         return value
+
+    def _warn_angular_frequency(self, src: UnitsContainer, dst: UnitsContainer):
+        """Warn when converting between angular frequency and frequency,
+        e.g. rpm to Hz, which silently introduces a factor of 2π."""
+        if self._get_dimensionality(src) != {"[time]": -1}:
+            return
+        _, root = self._get_root_units(src / dst)
+        if root["radian"]:
+            warnings.warn(
+                AngularFrequencyWarning(
+                    f"Converting {src} to {dst} mixes angular frequency and "
+                    f"frequency, which introduces a factor of 2*pi. "
+                    f"See {ANGULAR_FREQUENCY_DOCS_HTML}"
+                ),
+                skip_file_prefixes=(_PINT_DIR,),
+            )
 
     ############
     # Parsing

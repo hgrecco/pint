@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, TypeAlias
 
 from .delegates.formatter._format_helpers import formatter
 from .errors import (  # noqa: F401
+    AngularFrequencyWarning,
     DefinitionSyntaxError,
     DimensionalityError,
     LogarithmicUnitCalculusError,
@@ -143,6 +144,7 @@ __all__ = (
     "RedefinitionError",
     "UndefinedUnitError",
     "UnitStrippedWarning",
+    "AngularFrequencyWarning",
     "formatter",
     "get_application_registry",
     "set_application_registry",
