@@ -1323,6 +1323,28 @@ class TestNumpyUnclassified(TestNumpyMethods):
         q[:] = masked_q
         helpers.assert_quantity_equal(q, [1.0, 0.002] * self.ureg.m)
 
+    def test_setitem_subclass(self):
+        # issue #826: the value's class may differ from the array's class
+        # (subclass vs base class); assignment must behave the same either way.
+        class QClone(self.Q_):
+            pass
+
+        q = QClone([1.0, 2.0], "m")
+        q[0] = self.Q_(0.0, "m")
+        helpers.assert_quantity_equal(q, [0.0, 2.0] * self.ureg.m)
+
+        q = QClone([1.0, 2.0], "m")
+        q[0] = self.Q_(100.0, "cm")
+        helpers.assert_quantity_equal(q, [1.0, 2.0] * self.ureg.m)
+
+        q = self.Q_([1.0, 2.0], "m")
+        q[0] = QClone(0.0, "m")
+        helpers.assert_quantity_equal(q, [0.0, 2.0] * self.ureg.m)
+
+        q = QClone([1.0, 2.0], "m")
+        with pytest.raises(DimensionalityError):
+            q[0] = self.Q_(1.0, "s")
+
     def test_iterator(self):
         for q, v in zip(self.q.flatten(), [1, 2, 3, 4]):
             assert q == v * self.ureg.m
