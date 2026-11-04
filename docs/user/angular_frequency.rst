@@ -31,6 +31,14 @@ This leads to behavior some users may find unintuitive. For example, since angle
     >>> angle.dimensionality
     <UnitsContainer({})>
 
+It also means that different powers of an angle can be converted into each other, with the
+conversion done via radians. Pint emits an ``AngleExponentWarning`` for such conversions:
+
+.. code-block:: python
+
+    >>> (ureg('5 deg') ** 2).to('deg')  # AngleExponentWarning
+    <Quantity(0.436332313, 'degree')>
+
 Comparing angles
 ~~~~~~~~~~~~~~~~
 

@@ -66,7 +66,9 @@ from ..._typing import (
 )
 from ...compat import coerce_scalar, is_duck_array
 from ...errors import (
+    ANGLES_DOCS_HTML,
     ANGULAR_FREQUENCY_DOCS_HTML,
+    AngleExponentWarning,
     AngularFrequencyWarning,
     DimensionalityError,
     OffsetUnitCalculusError,
@@ -1189,7 +1191,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
         if isinstance(factor, DimensionalityError):
             raise factor
 
-        self._warn_angular_frequency(src, dst)
+        self._warn_angle_conversion(src, dst)
 
         # Decimal/Fraction magnitudes can't mix with float — coerce to match.
         factor = coerce_scalar(value, factor)
@@ -1201,18 +1203,29 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 
         return value
 
-    def _warn_angular_frequency(self, src: UnitsContainer, dst: UnitsContainer):
-        """Warn when converting between angular frequency and frequency,
-        e.g. rpm to Hz, which silently introduces a factor of 2π."""
-        if self._get_dimensionality(src) != {"[time]": -1}:
+    def _warn_angle_conversion(self, src: UnitsContainer, dst: UnitsContainer):
+        """Warn about conversions that silently add or remove an angle,
+        e.g. rpm to Hz (#1554) or degree ** 2 to degree (#2047)."""
+        _, ratio = self._get_root_units(src / dst)
+        if not ratio["radian"]:
             return
-        _, root = self._get_root_units(src / dst)
-        if root["radian"]:
+        if self._get_dimensionality(src) == {"[time]": -1}:
             warnings.warn(
                 AngularFrequencyWarning(
                     f"Converting {src} to {dst} mixes angular frequency and "
                     f"frequency, which introduces a factor of 2*pi. "
                     f"See {ANGULAR_FREQUENCY_DOCS_HTML}"
+                ),
+                skip_file_prefixes=(_PINT_DIR,),
+            )
+        elif (
+            self._get_root_units(src)[1]["radian"]
+            and self._get_root_units(dst)[1]["radian"]
+        ):
+            warnings.warn(
+                AngleExponentWarning(
+                    f"Converting {src} to {dst} changes the power of the angle, "
+                    f"which is done via radians. See {ANGLES_DOCS_HTML}"
                 ),
                 skip_file_prefixes=(_PINT_DIR,),
             )

@@ -12,6 +12,7 @@ import warnings
 import pytest
 
 from pint import (
+    AngleExponentWarning,
     AngularFrequencyWarning,
     Context,
     DefinitionSyntaxError,
@@ -2020,4 +2021,37 @@ def test_issue1554_no_angular_frequency_warning(src, dst):
     ureg = UnitRegistry()
     with warnings.catch_warnings():
         warnings.simplefilter("error", AngularFrequencyWarning)
+        ureg.Quantity(1, src).to(dst)
+
+
+@pytest.mark.parametrize(
+    "src, dst",
+    [
+        ("deg**2", "deg"),
+        ("deg", "deg**2"),
+        ("rad**2", "rad"),
+        ("m * deg**2", "m * deg"),
+        ("sr", "deg"),
+    ],
+)
+def test_issue2047_angle_exponent_warning(src, dst):
+    ureg = UnitRegistry()
+    with pytest.warns(AngleExponentWarning, match="angles"):
+        ureg.Quantity(1, src).to(dst)
+
+
+@pytest.mark.parametrize(
+    "src, dst",
+    [
+        ("deg**2", "sr"),
+        ("deg", "turn"),
+        ("m * deg", "m"),
+        ("deg", ""),
+        ("N * m / deg", "J"),
+    ],
+)
+def test_issue2047_no_angle_exponent_warning(src, dst):
+    ureg = UnitRegistry()
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", AngleExponentWarning)
         ureg.Quantity(1, src).to(dst)

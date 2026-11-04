@@ -22,6 +22,7 @@ LOG_ERROR_DOCS_HTML = "https://pint.readthedocs.io/en/stable/user/log_units.html
 ANGULAR_FREQUENCY_DOCS_HTML = (
     "https://pint.readthedocs.io/en/stable/user/angular_frequency.html"
 )
+ANGLES_DOCS_HTML = ANGULAR_FREQUENCY_DOCS_HTML + "#angles"
 
 MSG_INVALID_UNIT_NAME = "is not a valid unit name (must follow Python identifier rules)"
 MSG_INVALID_UNIT_SYMBOL = "is not a valid unit symbol (must not contain spaces)"
@@ -304,6 +305,21 @@ class UnitStrippedWarning(UserWarning, PintError):
 
 class AngularFrequencyWarning(UserWarning, PintError):
     """Raised when converting between angular frequency and frequency."""
+
+    msg: str
+
+    def __init__(self, msg: str):
+        self.msg = msg
+
+    def __str__(self) -> str:
+        return self.msg
+
+    def __reduce__(self):
+        return self.__class__, (self.msg,)
+
+
+class AngleExponentWarning(UserWarning, PintError):
+    """Raised when converting between different powers of an angle."""
 
     msg: str
 
