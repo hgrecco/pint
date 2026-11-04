@@ -315,7 +315,7 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
             )
 
         try:
-            if isinstance(value, self.__class__):
+            if isinstance(value, PlainQuantity):
                 # m_as handles offset units (e.g. degC into kelvin).
                 try:
                     factor = value.m_as(self._units)
