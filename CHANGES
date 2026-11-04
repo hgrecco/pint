@@ -4,6 +4,8 @@ Pint Changelog
 0.26.3 (unreleased)
 -------------------
 
+- Warn with `AngularFrequencyWarning` when converting between angular frequency and frequency, e.g. `rpm` to `Hz` (#1554)
+- Warn with `AngleExponentWarning` when converting between powers of an angle, e.g. `degree ** 2` to `degree` (#2047)
 - Deprecate `pint.util.matrix_to_string`, which is unused (#2547)
 - Fix parsing `.` as multiplication between units, e.g. `J/(kg.K)` (#2543)
 - Load definitions from TOML files; `pint/default_en.toml` holds the default definitions (#2526)

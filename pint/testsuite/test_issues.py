@@ -7,10 +7,13 @@ import math
 import pprint
 import subprocess
 import sys
+import warnings
 
 import pytest
 
 from pint import (
+    AngleExponentWarning,
+    AngularFrequencyWarning,
     Context,
     DefinitionSyntaxError,
     DimensionalityError,
@@ -1977,3 +1980,78 @@ def test_issue2535(func_registry):
 def test_issue2543_dot_multiplication(expr, expected):
     ureg = UnitRegistry()
     assert ureg.parse_units(expr) == ureg.parse_units(expected)
+
+
+@pytest.mark.parametrize(
+    "src, dst",
+    [
+        ("rpm", "Hz"),
+        ("Hz", "rpm"),
+        ("rps", "Hz"),
+        ("rad/s", "Hz"),
+        ("deg/min", "1/s"),
+        ("rpm", "1/s"),
+        ("Hz", "rad/s"),
+    ],
+)
+def test_issue1554_angular_frequency_warning(src, dst):
+    # Converting between angular frequency and frequency silently introduces a
+    # factor of 2*pi, so warn about it.
+    ureg = UnitRegistry()
+    with pytest.warns(AngularFrequencyWarning, match="angular_frequency"):
+        ureg.Quantity(1, src).to(dst)
+    with pytest.warns(AngularFrequencyWarning):
+        ureg.convert(1, src, dst)
+
+
+@pytest.mark.parametrize(
+    "src, dst",
+    [
+        ("rpm", "rad/s"),
+        ("rpm", "deg/s"),
+        ("Hz", "1/min"),
+        ("kHz", "Hz"),
+        ("cps", "Hz"),
+        ("deg", "rad"),
+        ("rad", ""),
+        ("rad/s**2", "1/s**2"),
+    ],
+)
+def test_issue1554_no_angular_frequency_warning(src, dst):
+    ureg = UnitRegistry()
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", AngularFrequencyWarning)
+        ureg.Quantity(1, src).to(dst)
+
+
+@pytest.mark.parametrize(
+    "src, dst",
+    [
+        ("deg**2", "deg"),
+        ("deg", "deg**2"),
+        ("rad**2", "rad"),
+        ("m * deg**2", "m * deg"),
+        ("sr", "deg"),
+    ],
+)
+def test_issue2047_angle_exponent_warning(src, dst):
+    ureg = UnitRegistry()
+    with pytest.warns(AngleExponentWarning, match="angles"):
+        ureg.Quantity(1, src).to(dst)
+
+
+@pytest.mark.parametrize(
+    "src, dst",
+    [
+        ("deg**2", "sr"),
+        ("deg", "turn"),
+        ("m * deg", "m"),
+        ("deg", ""),
+        ("N * m / deg", "J"),
+    ],
+)
+def test_issue2047_no_angle_exponent_warning(src, dst):
+    ureg = UnitRegistry()
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", AngleExponentWarning)
+        ureg.Quantity(1, src).to(dst)

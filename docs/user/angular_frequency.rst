@@ -31,6 +31,14 @@ This leads to behavior some users may find unintuitive. For example, since angle
     >>> angle.dimensionality
     <UnitsContainer({})>
 
+It also means that different powers of an angle can be converted into each other, with the
+conversion done via radians. Pint emits an ``AngleExponentWarning`` for such conversions:
+
+.. code-block:: python
+
+    >>> (ureg('5 deg') ** 2).to('deg')  # AngleExponentWarning
+    <Quantity(0.436332313, 'degree')>
+
 Comparing angles
 ~~~~~~~~~~~~~~~~
 
@@ -73,6 +81,15 @@ Since pint treats angle quantities as `dimensionless`, it allows conversions bet
     >>> angular_frequency = ureg('60rpm')
     >>> angular_frequency.to('Hz')
     Quantity(6.28318531, "hertz")
+
+Pint emits an ``AngularFrequencyWarning`` for such conversions. If the conversion is
+intended, the warning can be silenced with:
+
+.. code-block:: python
+
+    >>> import warnings
+    >>> import pint
+    >>> warnings.filterwarnings("ignore", category=pint.AngularFrequencyWarning)
 
 The SI BIPM Brochure (Bureau International des Poids et Mesures) states:
 
