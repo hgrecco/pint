@@ -8,6 +8,7 @@ import math
 import operator as op
 import pickle
 import warnings
+from decimal import Decimal
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
@@ -1032,6 +1033,22 @@ class TestQuantityToCompact(QuantityTestCase):
 
 # TODO: do not subclass from QuantityTestCase
 class TestQuantityBasicMath(QuantityTestCase):
+    @pytest.mark.parametrize(
+        ("operation", "expected"), [(op.add, "1.50"), (op.sub, "1.00")]
+    )
+    def test_decimal_arithmetic_with_identical_units(self, operation, expected):
+        left = self.Q_(Decimal("1.25"), "m")
+        right = self.Q_(Decimal("0.25"), "meter")
+
+        result = operation(left, right)
+
+        assert type(result) is type(left)
+        assert result.units == left.units
+        assert isinstance(result.magnitude, Decimal)
+        assert result.magnitude == Decimal(expected)
+        assert left.magnitude == Decimal("1.25")
+        assert right.magnitude == Decimal("0.25")
+
     def _test_inplace(self, operator, value1, value2, expected_result, unit=None):
         if isinstance(value1, str):
             value1 = self.Q_(value1)
