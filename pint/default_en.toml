@@ -186,6 +186,7 @@ elementary_charge = { value = "1.602176634e-19 C", symbol = "e" }               
 avogadro_number = { value = "6.02214076e23" }                                                      # since May 2019
 boltzmann_constant = { value = "1.380649e-23 J K^-1", symbol = "k", aliases = ["k_B"] }            # since May 2019
 standard_gravity = { value = "9.80665 m/s^2", symbol = "g_0", aliases = ["g0", "g_n", "gravity"] } # since 1901
+# Exact pressure reference of 101325 pascal, also named atm and atmosphere.
 standard_atmosphere = { value = "1.01325e5 Pa", symbol = "atm", aliases = ["atmosphere"] }         # since 1954
 conventional_josephson_constant = { value = "4.835979e14 Hz / V", symbol = "K_J90" }               # since Jan 1990
 conventional_von_klitzing_constant = { value = "2.5812807e4 ohm", symbol = "R_K90" }               # since Jan 1990
@@ -364,6 +365,10 @@ foot_per_second = { value = "foot / second", symbol = "fps" }
 
 # Volumetric Flow Rate
 sverdrup = { value = "1e6 * meter ** 3 / second", symbol = "sv" }
+# Volume flow referred to the caller's standard conditions. This does not choose
+# a universal reference temperature or convert between actual and standard gas
+# flow. For pressure-volume throughput, use atmosphere * liter / minute.
+standard_liter_per_minute = { value = "liter / minute", symbol = "slm" }
 
 # Acceleration
 galileo = { value = "centimeter / second ** 2", symbol = "Gal" }
@@ -406,7 +411,6 @@ metric_horsepower = { value = "75 * force_kilogram * meter / second" }
 electrical_horsepower = { value = "746 * watt" }
 refrigeration_ton = { value = "12e3 * Btu / hour", aliases = ["ton_of_refrigeration"] }                                          # approximate, no exact definition
 cooling_tower_ton = { value = "1.25 * refrigeration_ton" }                                                                       # approximate, no exact definition
-standard_liter_per_minute = { value = "atmosphere * liter / minute", symbol = "slm" }
 conventional_watt_90 = { value = "K_J90 ** 2 * R_K90 / (K_J ** 2 * R_K) * watt", symbol = "W_90" }
 
 # Momentum
