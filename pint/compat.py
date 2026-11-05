@@ -139,8 +139,8 @@ except ModuleNotFoundError:
         return HAS_DASK and isinstance(x, dask_array.Array)  # pyright: ignore[reportPrivateImportUsage]
 
 
-def is_duck_array(obj: object) -> TypeIs[np.typing.ArrayLike]:
-    """Check if an object represents a (non-Quantity) duck array type."""
+def is_ndarray_or_duck(obj: object) -> TypeIs[Array]:
+    """Check if an object represents a (non-Quantity) duck array."""
     return isinstance(obj, ndarray) or (
         not hasattr(obj, "_magnitude")
         and not hasattr(obj, "_units")
@@ -168,7 +168,7 @@ def eq(lhs: Any, rhs: Any, check_all: bool) -> bool | Iterable[bool]:
     bool or array_like of bool
     """
     out = lhs == rhs
-    if check_all and is_duck_array_type(type(out)):
+    if check_all and is_ndarray_or_duck(out):
         return out.all()
     return out
 
@@ -189,7 +189,7 @@ def isnan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
     bool or array_like of bool.
         Always return False for non-numeric types.
     """
-    if is_duck_array_type(type(obj)):
+    if is_ndarray_or_duck(obj):
         if obj.dtype.kind in "ifc":
             out = np.isnan(obj)
         elif obj.dtype.kind in "Mm":
@@ -232,7 +232,7 @@ def zero_or_nan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
         Always return False for non-numeric types.
     """
     out = eq(obj, 0, False) + isnan(obj, False)
-    if check_all and is_duck_array_type(type(out)):
+    if check_all and is_ndarray_or_duck(out):
         return out.all()
     return out
 
