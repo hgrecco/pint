@@ -227,6 +227,7 @@ def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
             out = xp.isnan(obj)
         elif getattr(obj.dtype, "kind", "?") in "Mm":  # numpy datetime or timedelta
             out = xp.isnat(obj)  # pyright: ignore[reportAttributeAccessIssue]
+        else:
             if HAS_UNCERTAINTIES:
                 try:
                     out = unp.isnan(obj)
