@@ -128,6 +128,9 @@ try:
     _array_namespace = xpc.array_namespace  # pyright: ignore[reportAssignmentType]
     _array_size = xpc.size
 
+    # Bonus: cheap isinstance functions for array libraries
+    is_dask_array = xpc.is_dask_array
+
 except ModuleNotFoundError:
     xpc = None
 
@@ -139,6 +142,9 @@ except ModuleNotFoundError:
 
     def _array_size(x: Array, /) -> int | None:
         return x.size
+
+    def is_dask_array(x: object, /) -> TypeIs["dask_array.Array"]:  # pyright: ignore[reportPrivateImportUsage]
+        return HAS_DASK and isinstance(x, dask_array.Array)  # pyright: ignore[reportPrivateImportUsage]
 
 
 def is_duck_array(obj: object, /) -> TypeIs[Array]:

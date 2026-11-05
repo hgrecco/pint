@@ -14,7 +14,7 @@ from __future__ import annotations
 import functools
 
 from ..._typing import Magnitude
-from ...compat import TypeAlias, compute, dask_array, persist, visualize
+from ...compat import TypeAlias, compute, dask_array, is_dask_array, persist, visualize
 from ..plain import (
     GenericPlainRegistry,
     PlainQuantity,
@@ -25,7 +25,7 @@ from ..plain import (
 def check_dask_array(f):
     @functools.wraps(f)
     def wrapper(self, *args, **kwargs):
-        if isinstance(self._magnitude, dask_array.Array):
+        if is_dask_array(self._magnitude):
             return f(self, *args, **kwargs)
         else:
             msg = "Method {} only implemented for objects of {}, not {}".format(
@@ -39,7 +39,7 @@ def check_dask_array(f):
 class DaskQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
     # Dask.array.Array ducking
     def __dask_graph__(self):
-        if isinstance(self._magnitude, dask_array.Array):
+        if is_dask_array(self._magnitude):
             return self._magnitude.__dask_graph__()
 
         return None
