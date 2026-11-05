@@ -23,6 +23,7 @@ from importlib import import_module
 from importlib.util import find_spec
 from numbers import Number
 from typing import (
+    TYPE_CHECKING,
     Any,
     Literal,
     # Remove once all dependent packages change their imports.
@@ -387,11 +388,15 @@ else:
 if HAS_DASK:
     from dask.base import compute, persist, visualize
 
-    class _LazyDaskArray:
-        def __getattr__(self, attr):
-            return getattr(import_module("dask.array"), attr)
+    if TYPE_CHECKING:
+        from dask import array as dask_array
+    else:
 
-    dask_array = _LazyDaskArray()
+        class _LazyDaskArray:
+            def __getattr__(self, attr):
+                return getattr(import_module("dask.array"), attr)
+
+        dask_array = _LazyDaskArray()
 else:
     compute, persist, visualize = None, None, None
     dask_array = None
