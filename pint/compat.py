@@ -132,10 +132,10 @@ except ModuleNotFoundError:
         """Check if an object supports the Array API."""
         return hasattr(x, "__array_namespace__")
 
-    def _array_namespace(x: Array, /) -> ArrayAPIModule:
+    def array_api_namespace(x: Array, /) -> ArrayAPIModule:
         return x.__array_namespace__()  # pyright: ignore[reportReturnType]
 
-    def _array_size(x: Array, /) -> int | None:
+    def array_api_size(x: Array, /) -> int | None:
         return x.size
 
     def is_dask_array(x: object, /) -> TypeIs["dask_array.Array"]:  # pyright: ignore[reportPrivateImportUsage]
@@ -166,7 +166,7 @@ def is_array_api_or_duck(obj: object, /) -> TypeGuard[Array]:
 def array_namespace_or_np(obj: Array, /) -> ArrayAPIModule:
     """Find the array namespace for the given array (via the Array API) or duck array (default: `numpy`)."""
     if has_array_api(obj):
-        return _array_namespace(obj)
+        return array_api_namespace(obj)
     return numpy  # pyright: ignore[reportReturnType]
 
 
@@ -265,8 +265,11 @@ def zero_or_nan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool
         Always return False for non-numeric types.
     """
     out = (obj == 0) | isnan(obj, False)
-    if check_all and is_array_api_or_duck(out):
-        return out.all().item()
+    if check_all:
+        if has_array_api(out):
+            return array_api_namespace(out).all(out).item()
+        elif is_duck_array(out):
+            return out.all().item()
     return out
 
 
