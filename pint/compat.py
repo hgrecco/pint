@@ -192,8 +192,11 @@ def eq(lhs: Any, rhs: Any, /, check_all: bool) -> "bool | np.bool | Iterable[boo
     bool or array_like of bool
     """
     out = lhs == rhs
-    if check_all and is_array_api_or_duck(out):
-        return out.all().item()
+    if check_all:
+        if has_array_api(out):
+            return array_api_namespace(out).all(out).item()
+        elif is_duck_array(out):
+            return out.all().item()
     return out
 
 
