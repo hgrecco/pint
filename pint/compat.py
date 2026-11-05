@@ -139,21 +139,15 @@ except ModuleNotFoundError:
         return HAS_DASK and isinstance(x, dask_array.Array)  # pyright: ignore[reportPrivateImportUsage]
 
 
-def is_duck_array_type(cls: type) -> bool:
-    """Check if the type object represents a (non-Quantity) duck array type."""
-    # TODO (NEP 30): replace duck array check with hasattr(other, "__duckarray__")
-    return issubclass(cls, ndarray) or (
-        not hasattr(cls, "_magnitude")
-        and not hasattr(cls, "_units")
-        and hasattr(cls, "__array_function__")
-        and hasattr(cls, "ndim")
-        and hasattr(cls, "dtype")
-    )
-
-
 def is_duck_array(obj: object) -> TypeIs[np.typing.ArrayLike]:
     """Check if an object represents a (non-Quantity) duck array type."""
-    return is_duck_array_type(type(obj))
+    return isinstance(obj, ndarray) or (
+        not hasattr(obj, "_magnitude")
+        and not hasattr(obj, "_units")
+        and hasattr(obj, "__array_function__")
+        and hasattr(obj, "ndim")
+        and hasattr(obj, "dtype")
+    )
 
 
 def eq(lhs: Any, rhs: Any, check_all: bool) -> bool | Iterable[bool]:
