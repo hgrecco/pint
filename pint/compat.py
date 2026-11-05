@@ -20,11 +20,13 @@ from numbers import Number
 from typing import (
     TYPE_CHECKING,
     Any,
+    Literal,
     # Remove once all dependent packages change their imports.
     NoReturn,
     TypeAlias,  # noqa
     TypeGuard,
     Unpack,  # noqa
+    overload,
 )
 
 from typing_extensions import TypeIs, deprecated  # noqa
@@ -168,7 +170,11 @@ def array_namespace_or_np(obj: Array, /) -> ArrayAPIModule:
     return numpy  # pyright: ignore[reportReturnType]
 
 
-def eq(lhs: Any, rhs: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]":
+@overload
+def eq(lhs: Any, rhs: Any, /, check_all: Literal[True]) -> bool: ...
+@overload
+def eq(lhs: Any, rhs: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]": ...
+def eq(lhs: Any, rhs: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
     """Comparison of scalars and arrays.
 
     Parameters
@@ -191,7 +197,11 @@ def eq(lhs: Any, rhs: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]"
     return out
 
 
-def isnan(obj: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]":
+@overload
+def isnan(obj: Any, /, check_all: Literal[True]) -> "bool | np.bool": ...
+@overload
+def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]": ...
+def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
     """Test for NaN or NaT.
 
     Parameters
@@ -233,7 +243,11 @@ def isnan(obj: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]":
         return False
 
 
-def zero_or_nan(obj: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]":
+@overload
+def zero_or_nan(obj: Any, /, check_all: Literal[True]) -> bool: ...
+@overload
+def zero_or_nan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]": ...
+def zero_or_nan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
     """Test if obj is zero, NaN, or NaT.
 
     Parameters
