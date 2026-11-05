@@ -18,14 +18,18 @@ from importlib import import_module
 from importlib.util import find_spec
 from numbers import Number
 from typing import (
+    TYPE_CHECKING,
     Any,
     # Remove once all dependent packages change their imports.
     NoReturn,
     TypeAlias,  # noqa
+    TypeGuard,
     Unpack,  # noqa
 )
 
 from typing_extensions import TypeIs, deprecated  # noqa
+
+from ._array_api_typing import Array, ArrayAPIModule
 
 
 def coerce_scalar(value, scalar):
@@ -103,6 +107,36 @@ def is_upcast_type(cls: type) -> bool:
         # cache the actual class anyway
         upcast_type_map[fqn] = real_cls
         return cls is real_cls or cls == real_cls
+
+
+#######
+# Array support
+#######
+
+try:
+    import array_api_compat as xpc
+
+    _is_array_api_obj = xpc.is_array_api_obj  # pyright: ignore[reportAssignmentType]
+    _array_namespace = xpc.array_namespace  # pyright: ignore[reportAssignmentType]
+    _array_size = xpc.size
+
+    # Bonus: cheap isinstance functions for array libraries
+    is_dask_array = xpc.is_dask_array
+
+except ModuleNotFoundError:
+    xpc = None
+
+    def _is_array_api_obj(x: object, /) -> TypeGuard[Array]:
+        return hasattr(x, "__array_namespace__")
+
+    def _array_namespace(x: Array, /) -> ArrayAPIModule:
+        return x.__array_namespace__()  # pyright: ignore[reportReturnType]
+
+    def _array_size(x: Array, /) -> int | None:
+        return x.size
+
+    def is_dask_array(x: object, /) -> TypeIs["dask_array.Array"]:  # pyright: ignore[reportPrivateImportUsage]
+        return HAS_DASK and isinstance(x, dask_array.Array)  # pyright: ignore[reportPrivateImportUsage]
 
 
 def is_duck_array_type(cls: type) -> bool:
@@ -329,11 +363,15 @@ else:
 if HAS_DASK:
     from dask.base import compute, persist, visualize
 
-    class _LazyDaskArray:
-        def __getattr__(self, attr):
-            return getattr(import_module("dask.array"), attr)
+    if TYPE_CHECKING:
+        import dask.array as dask_array
+    else:
 
-    dask_array = _LazyDaskArray()
+        class _LazyDaskArray:
+            def __getattr__(self, attr):
+                return getattr(import_module("dask.array"), attr)
+
+        dask_array = _LazyDaskArray()
 else:
     compute, persist, visualize = None, None, None
     dask_array = None
