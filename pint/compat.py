@@ -170,6 +170,14 @@ def array_namespace_or_np(obj: Array, /) -> ArrayAPIModule:
     return numpy  # pyright: ignore[reportReturnType]
 
 
+def array_size(array: Array, /) -> int | None:
+    """Return the size (i.e. number of elements) of the given array (via the Array API) or duck array."""
+    if has_array_api(array):
+        return array_api_size(array)
+    else:  # this can happen if `array` is a duck-array
+        return array.size
+
+
 @overload
 def eq(lhs: Any, rhs: Any, /, check_all: Literal[True]) -> bool: ...
 @overload
