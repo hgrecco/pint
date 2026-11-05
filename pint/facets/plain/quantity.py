@@ -1396,16 +1396,25 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
                 self._magnitude = self.m_as("") ** other
                 self._units = self.UnitsContainer()
                 return self
-            if array_size(other) != 1:
-                raise DimensionalityError(
-                    self._units,
-                    "dimensionless",
-                    extra_msg=". PlainQuantity array exponents are only allowed if the "
-                    "plain is dimensionless",
-                )
-            else:
-                # we don't want array units!
-                unit_exponent = other.item()
+            match array_size(other):
+                case 1:
+                    # we don't want array units!
+                    unit_exponent = other.item()
+                case None:
+                    raise DimensionalityError(
+                        self._units,
+                        "dimensionless",
+                        extra_msg=". Pint could not verify that the power (a lazy array) represents a scalar,"
+                        "because inspecting its dimension would require a full evaluation.\n"
+                        "We only support scalar powers because otherwise the resulting quantities would have"
+                        " entry-dependent units, but such an object is not representable in Pint.",
+                    )
+                case _:
+                    raise DimensionalityError(
+                        self._units,
+                        "dimensionless",
+                        extra_msg=". PlainQuantity array exponents are only allowed if the plain is dimensionless",
+                    )
         else:
             unit_exponent = other
         # Unit calculation
@@ -1463,15 +1472,25 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
                 return self.__class__(
                     self._convert_magnitude_not_inplace(self.UnitsContainer()) ** other,
                 )
-            elif array_size(other) != 1:
-                raise DimensionalityError(
-                    self._units,
-                    "dimensionless",
-                    extra_msg=". PlainQuantity array exponents are only allowed if the base is dimensionless",
-                )
-            else:
-                # we don't want array units!
-                unit_exponent = other.item()
+            match array_size(other):
+                case 1:
+                    # we don't want array units!
+                    unit_exponent = other.item()
+                case None:
+                    raise DimensionalityError(
+                        self._units,
+                        "dimensionless",
+                        extra_msg=". Pint could not verify that the power (a lazy array) represents a scalar,"
+                        "because inspecting its dimension would require a full evaluation.\n"
+                        "We only support scalar powers because otherwise the resulting quantities would have"
+                        " entry-dependent units, but such an object is not representable in Pint.",
+                    )
+                case _:
+                    raise DimensionalityError(
+                        self._units,
+                        "dimensionless",
+                        extra_msg=". PlainQuantity array exponents are only allowed if the base is dimensionless",
+                    )
         else:
             unit_exponent = other
         # Unit calculation

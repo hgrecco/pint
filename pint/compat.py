@@ -121,12 +121,12 @@ def is_upcast_type(cls: type) -> bool:
 # Array support
 #######
 
-# NOTE: This try-import is here and not at the bottom of the file because it is not intended to export any symbol
 try:
     import array_api_compat as xpc
 
     _is_array_api_obj = xpc.is_array_api_obj  # pyright: ignore[reportAssignmentType]
     _array_namespace = xpc.array_namespace  # pyright: ignore[reportAssignmentType]
+    _array_size = xpc.size
 
 except ModuleNotFoundError:
     xpc = None
@@ -136,6 +136,9 @@ except ModuleNotFoundError:
 
     def _array_namespace(x: Array, /) -> ArrayAPIModule:
         return x.__array_namespace__()  # pyright: ignore[reportReturnType]
+
+    def _array_size(x: Array, /) -> int | None:
+        return x.size
 
 
 def is_duck_array(obj: object, /) -> TypeIs[Array]:
@@ -179,10 +182,11 @@ def array_namespace(array: Array, /) -> ArrayAPIModule:
         raise TypeError("Pint only fully supports duck arrays if NumPy is available.")
 
 
-def array_size(array: Array, /) -> int:
-    if hasattr(array, "size"):
+def array_size(array: Array, /) -> int | None:
+    if _is_array_api_obj(array):
+        return _array_size(array)
+    else:  # this can happen if `array` is a duck-array
         return array.size
-    return array_namespace(array).size(array)  # pyright: ignore[reportAttributeAccessIssue]
 
 
 @overload
