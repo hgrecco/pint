@@ -116,9 +116,9 @@ def is_upcast_type(cls: type) -> bool:
 try:
     import array_api_compat as xpc
 
-    _is_array_api_obj = xpc.is_array_api_obj  # pyright: ignore[reportAssignmentType]
-    _array_namespace = xpc.array_namespace  # pyright: ignore[reportAssignmentType]
-    _array_size = xpc.size
+    has_array_api = xpc.is_array_api_obj  # pyright: ignore[reportAssignmentType]
+    array_api_namespace = xpc.array_namespace  # pyright: ignore[reportAssignmentType]
+    array_api_size = xpc.size
 
     # Bonus: cheap isinstance functions for array libraries
     is_dask_array = xpc.is_dask_array
@@ -126,7 +126,8 @@ try:
 except ModuleNotFoundError:
     xpc = None
 
-    def _is_array_api_obj(x: object, /) -> TypeGuard[Array]:
+    def has_array_api(x: object, /) -> TypeGuard[Array]:
+        """Check if an object supports the Array API."""
         return hasattr(x, "__array_namespace__")
 
     def _array_namespace(x: Array, /) -> ArrayAPIModule:
@@ -139,9 +140,9 @@ except ModuleNotFoundError:
         return HAS_DASK and isinstance(x, dask_array.Array)  # pyright: ignore[reportPrivateImportUsage]
 
 
-def is_ndarray_or_duck(obj: object) -> TypeIs[Array]:
+def is_duck_array(obj: object, /) -> TypeGuard[Array]:
     """Check if an object represents a (non-Quantity) duck array."""
-    return isinstance(obj, ndarray) or (
+    return (
         not hasattr(obj, "_magnitude")
         and not hasattr(obj, "_units")
         and hasattr(obj, "__array_function__")
@@ -150,7 +151,12 @@ def is_ndarray_or_duck(obj: object) -> TypeIs[Array]:
     )
 
 
-def eq(lhs: Any, rhs: Any, check_all: bool) -> bool | Iterable[bool]:
+def is_ndarray_or_duck(obj: object, /) -> TypeGuard[Array]:
+    """Check if an object represents either a NumPy array (np.ndarray) or a (non-Quantity) duck array."""
+    return isinstance(obj, ndarray) or is_duck_array(obj)
+
+
+def eq(lhs: Any, rhs: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]":
     """Comparison of scalars and arrays.
 
     Parameters
@@ -173,7 +179,7 @@ def eq(lhs: Any, rhs: Any, check_all: bool) -> bool | Iterable[bool]:
     return out
 
 
-def isnan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
+def isnan(obj: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]":
     """Test for NaN or NaT.
 
     Parameters
@@ -215,7 +221,7 @@ def isnan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
         return False
 
 
-def zero_or_nan(obj: Any, check_all: bool) -> bool | Iterable[bool]:
+def zero_or_nan(obj: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]":
     """Test if obj is zero, NaN, or NaT.
 
     Parameters
