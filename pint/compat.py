@@ -153,7 +153,19 @@ def is_duck_array(obj: object, /) -> TypeGuard[Array]:
 
 def is_ndarray_or_duck(obj: object, /) -> TypeGuard[Array]:
     """Check if an object represents either a NumPy array (np.ndarray) or a (non-Quantity) duck array."""
-    return isinstance(obj, ndarray) or is_duck_array(obj)
+    return (HAS_NUMPY and isinstance(obj, ndarray)) or is_duck_array(obj)
+
+
+def is_array_api_or_duck(obj: object, /) -> TypeGuard[Array]:
+    """Check if an object represents either an Array API array or a (non-Quantity) duck array."""
+    return has_array_api(obj) or is_duck_array(obj)
+
+
+def array_namespace_or_np(obj: Array, /) -> ArrayAPIModule:
+    """Find the array namespace for the given array (via the Array API) or duck array (default: `numpy`)."""
+    if has_array_api(obj):
+        return _array_namespace(obj)
+    return numpy  # pyright: ignore[reportReturnType]
 
 
 def eq(lhs: Any, rhs: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]":
@@ -174,8 +186,8 @@ def eq(lhs: Any, rhs: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]"
     bool or array_like of bool
     """
     out = lhs == rhs
-    if check_all and is_ndarray_or_duck(out):
-        return out.all()
+    if check_all and is_array_api_or_duck(out):
+        return out.all().item()
     return out
 
 
@@ -237,9 +249,9 @@ def zero_or_nan(obj: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]":
     bool or array_like of bool.
         Always return False for non-numeric types.
     """
-    out = eq(obj, 0, False) + isnan(obj, False)
-    if check_all and is_ndarray_or_duck(out):
-        return out.all()
+    out = (obj == 0) | isnan(obj, False)
+    if check_all and is_array_api_or_duck(out):
+        return out.all().item()
     return out
 
 
