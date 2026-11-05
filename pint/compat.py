@@ -163,7 +163,9 @@ def is_ndarray_or_duck(obj: object, /) -> TypeIs[Array]:
 
 def is_array_or_duck(obj: object, /) -> TypeIs[Array]:
     """Check if an object represents a (non-Quantity) array, or duck array."""
-    return _is_array_api_obj(obj) or is_duck_array(obj)
+    return (_is_array_api_obj(obj) or is_duck_array(obj)) and not (
+        HAS_NUMPY and isinstance(obj, np.generic)
+    )
 
 
 def array_namespace(array: Array, /) -> ArrayAPIModule:
