@@ -198,7 +198,7 @@ def eq(lhs: Any, rhs: Any, /, check_all: bool) -> "bool | np.bool | Iterable[boo
 
 
 @overload
-def isnan(obj: Any, /, check_all: Literal[True]) -> "bool | np.bool": ...
+def isnan(obj: Any, /, check_all: Literal[True]) -> bool: ...
 @overload
 def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]": ...
 def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
@@ -217,22 +217,23 @@ def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
     bool or array_like of bool.
         Always return False for non-numeric types.
     """
-    if is_ndarray_or_duck(obj):
-        if obj.dtype.kind in "ifc":
-            out = np.isnan(obj)
-        elif obj.dtype.kind in "Mm":
-            out = np.isnat(obj)
-        else:
+    # arrays
+    if is_array_api_or_duck(obj):
+        xp = array_namespace_or_np(obj)
+        if xp.isdtype(obj.dtype, "numeric"):
+            out = xp.isnan(obj)
+        elif getattr(obj.dtype, "kind", "?") in "Mm":  # numpy datetime or timedelta
+            out = xp.isnat(obj)  # pyright: ignore[reportAttributeAccessIssue]
             if HAS_UNCERTAINTIES:
                 try:
                     out = unp.isnan(obj)
                 except TypeError:
-                    # Not a numeric or UFloat type
-                    out = np.full(obj.shape, False)
+                    # Not a numeric, datetime or UFloat type
+                    out = xp.full(obj.shape, False)
             else:
                 # Not a numeric or datetime type
-                out = np.full(obj.shape, False)
-        return out.any() if check_all else out
+                out = xp.full(obj.shape, False)
+        return out.any().item() if check_all else out
     if isinstance(obj, np_datetime64):
         return np.isnat(obj)
     elif HAS_UNCERTAINTIES and isinstance(obj, UFloat):
