@@ -29,6 +29,7 @@ from typing import (
     # Remove once all dependent packages change their imports.
     NoReturn,
     TypeAlias,  # noqa
+    TypeGuard,
     Unpack,  # noqa
     overload,
 )
@@ -120,8 +121,24 @@ def is_upcast_type(cls: type) -> bool:
 # Array support
 #######
 
+# NOTE: This try-import is here and not at the bottom of the file because it is not intended to export any symbol
+try:
+    import array_api_compat as xpc
 
-def _is_duck_array(obj: object, /) -> TypeIs[Array]:
+    _is_array_api_obj = xpc.is_array_api_obj  # pyright: ignore[reportAssignmentType]
+    _array_namespace = xpc.array_namespace  # pyright: ignore[reportAssignmentType]
+
+except ModuleNotFoundError:
+    xpc = None
+
+    def _is_array_api_obj(x: object, /) -> TypeGuard[Array]:
+        return hasattr(x, "__array_namespace__")
+
+    def _array_namespace(x: Array, /) -> ArrayAPIModule:
+        return x.__array_namespace__()  # pyright: ignore[reportReturnType]
+
+
+def is_duck_array(obj: object, /) -> TypeIs[Array]:
     """Check if an object represents a (non-Quantity) duck array."""
     return (
         # make sure it's not quantity-like
@@ -141,18 +158,18 @@ def _is_duck_array(obj: object, /) -> TypeIs[Array]:
 
 def is_ndarray_or_duck(obj: object, /) -> TypeIs[Array]:
     """Check if an object represents a (non-Quantity) duck array."""
-    return (HAS_NUMPY and isinstance(obj, ndarray)) or _is_duck_array(obj)
+    return (HAS_NUMPY and isinstance(obj, ndarray)) or is_duck_array(obj)
 
 
 def is_array_or_duck(obj: object, /) -> TypeIs[Array]:
     """Check if an object represents a (non-Quantity) array, or duck array."""
-    return hasattr(obj, "__array_namespace__") or _is_duck_array(obj)
+    return _is_array_api_obj(obj) or is_duck_array(obj)
 
 
 def array_namespace(array: Array, /) -> ArrayAPIModule:
     """Find the array namespace for the given array or duck array (default: `numpy`)."""
-    if hasattr(array, "__array_namespace__"):
-        return array.__array_namespace__()  # pyright: ignore[reportReturnType]
+    if _is_array_api_obj(array):
+        return _array_namespace(array)
     # backwards-compatible duck array support
     elif HAS_NUMPY:
         return numpy  # pyright: ignore[reportReturnType]
