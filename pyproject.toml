@@ -140,6 +140,7 @@ dev = { features = ["numpy", "dev", "py313"], solve-group = "default" }
 lint = { features = ["lint"], no-default-feature = true }
 build = { features = ["build"], no-default-feature = true }
 test = { features = ["test"], solve-group = "default" }
+test-array = { features = ["test-array"], solve-group = "default" }
 test-all = { features = ["test-all"], solve-group = "default" }
 typecheck = { features = [
   "typecheck",
@@ -177,12 +178,12 @@ all = { features = [
 test-py312 = ["test", "py312"]
 test-py313 = ["test", "py313"]
 test-py314 = ["test", "py314"]
-test-py312-numpy = ["numpy", "test", "py312"]
-test-py313-numpy = ["numpy", "test", "py313"]
-test-py314-numpy = ["numpy", "test", "py314"]
-test-py312-all = ["all", "test", "py312"]
-test-py313-all = ["all", "test", "py313"]
-test-py314-all = ["all", "test", "py314"]
+test-py312-numpy = ["numpy", "test", "test-array", "py312"]
+test-py313-numpy = ["numpy", "test", "test-array", "py313"]
+test-py314-numpy = ["numpy", "test", "test-array", "py314"]
+test-py312-all = ["all", "test", "test-array", "py312"]
+test-py313-all = ["all", "test", "test-array", "py313"]
+test-py314-all = ["all", "test", "test-array", "py314"]
 
 [tool.pixi.feature.dev.dependencies]
 tomlkit = "*"
