@@ -202,7 +202,7 @@ def eq(lhs: Any, rhs: Any, /, check_all: bool) -> "bool | np.bool | Iterable[boo
     out = lhs == rhs
     if check_all:
         if has_array_api(out):
-            return array_api_namespace(out).all(out).item()
+            return bool(array_api_namespace(out).all(out))
         elif is_duck_array(out):
             return out.all().item()
     return out
@@ -245,7 +245,7 @@ def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
             else:
                 # Not a numeric or datetime type
                 out = xp.full(obj.shape, False)
-        return out.any().item() if check_all else out
+        return bool(out.any()) if check_all else out
     if isinstance(obj, np_datetime64):
         return np.isnat(obj)
     elif HAS_UNCERTAINTIES and isinstance(obj, UFloat):
@@ -279,7 +279,7 @@ def zero_or_nan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool
     out = (obj == 0) | isnan(obj, False)
     if check_all:
         if has_array_api(out):
-            return array_api_namespace(out).all(out).item()
+            return bool(array_api_namespace(out).all(out))
         elif is_duck_array(out):
             return out.all().item()
     return out
