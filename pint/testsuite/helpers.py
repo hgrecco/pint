@@ -142,13 +142,13 @@ requires_not_uncertainties = pytest.mark.skipif(
 requires_scipy = pytest.mark.skipif(not HAS_SCIPY, reason="Requires scipy")
 
 try:
-    import array_api_strict as xps
+    import array_api_strict
 except ModuleNotFoundError:
     assert not TYPE_CHECKING
-    xps = None
+    array_api_strict = None
 
 requires_array_api_strict = pytest.mark.skipif(
-    xps is None, reason="Requires array-api-strict"
+    array_api_strict is None, reason="Requires array-api-strict"
 )
 
 # Parametrization
