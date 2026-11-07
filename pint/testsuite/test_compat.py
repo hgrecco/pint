@@ -13,6 +13,25 @@ def test_eq(check_all):
     assert not eq(0, 1, check_all)
 
 
+@helpers.requires_array_api_strict
+def test_eq_array_api():
+    xp = helpers.xps
+    # array == array
+    assert eq(xp.asarray([1, 2]), xp.asarray([1, 2]), True)
+    assert not eq(xp.asarray([1, 2]), xp.asarray([1, 3]), True)
+    np.testing.assert_equal(
+        eq(xp.asarray([1, 2]), xp.asarray([1, 2]), False), xp.asarray([True, True])
+    )
+    np.testing.assert_equal(
+        eq(xp.asarray([1, 2]), xp.asarray([1, 3]), False), xp.asarray([True, False])
+    )
+    # array == scalar
+    assert eq(1, xp.asarray([1, 1]), True)
+    assert eq(xp.asarray([1, 1]), 1, True)
+    assert not eq(1, xp.asarray([1, 2]), True)
+    assert not eq(xp.asarray([1, 2]), 1, True)
+
+
 @helpers.requires_numpy
 def test_eq_numpy():
     assert eq(np.array([1, 2]), np.array([1, 2]), True)
