@@ -245,7 +245,7 @@ def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
             else:
                 # Not a numeric or datetime type
                 out = xp.full(obj.shape, False)
-        return bool(out.any()) if check_all else out
+        return bool(xp.any(out)) if check_all else out
     if isinstance(obj, np_datetime64):
         return np.isnat(obj)
     elif HAS_UNCERTAINTIES and isinstance(obj, UFloat):
