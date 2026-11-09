@@ -1181,7 +1181,7 @@ class TestRegistry(QuantityTestCase):
 
 
 class TestCaseInsensitiveRegistry(QuantityTestCase):
-    kwargs = dict(case_sensitive=False)
+    kwargs = {"case_sensitive": False}
 
     def test_case_sensitivity(self):
         ureg = self.ureg

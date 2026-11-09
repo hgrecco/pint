@@ -63,7 +63,7 @@ def matrix_to_latex(matrix: ItMatrix, fmtfun: FORMATTER | str = "{:.2n}".format)
 
 
 def ndarray_to_latex_parts(
-    ndarr: ndarray, fmtfun: FORMATTER = "{:.2n}".format, dim: tuple[int, ...] = tuple()
+    ndarr: ndarray, fmtfun: FORMATTER = "{:.2n}".format, dim: tuple[int, ...] = ()
 ) -> list[str]:
     """Convert an numpy array into an iterable of elements to be print.
 
@@ -101,7 +101,7 @@ def ndarray_to_latex_parts(
 def ndarray_to_latex(
     ndarr: ndarray,
     fmtfun: FORMATTER | str = "{:.2n}".format,
-    dim: tuple[int, ...] = tuple(),
+    dim: tuple[int, ...] = (),
 ) -> str:
     """Format a numpy array into string."""
     return "\n".join(ndarray_to_latex_parts(ndarr, fmtfun, dim))

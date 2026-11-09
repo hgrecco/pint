@@ -193,7 +193,7 @@ class Context:
     def __init__(
         self,
         name: str | None = None,
-        aliases: tuple[str, ...] = tuple(),
+        aliases: tuple[str, ...] = (),
         defaults: dict[str, Any] | None = None,
     ) -> None:
         self.name: str | None = name

@@ -1155,39 +1155,39 @@ class _TestOffsetUnitMath(NonIntTypeTestCase):
 
 
 class TestNonIntTypeQuantityFloat(_TestBasic):
-    kwargs = dict(non_int_type=float)
+    kwargs = {"non_int_type": float}
     SUPPORTS_NAN = True
 
 
 class TestNonIntTypeQuantityBasicMathFloat(_TestQuantityBasicMath):
-    kwargs = dict(non_int_type=float)
+    kwargs = {"non_int_type": float}
 
 
 class TestNonIntTypeOffsetUnitMathFloat(_TestOffsetUnitMath):
-    kwargs = dict(non_int_type=float)
+    kwargs = {"non_int_type": float}
 
 
 class TestNonIntTypeQuantityDecimal(_TestBasic):
-    kwargs = dict(non_int_type=Decimal)
+    kwargs = {"non_int_type": Decimal}
     SUPPORTS_NAN = True
 
 
 class TestNonIntTypeQuantityBasicMathDecimal(_TestQuantityBasicMath):
-    kwargs = dict(non_int_type=Decimal)
+    kwargs = {"non_int_type": Decimal}
 
 
 class TestNonIntTypeOffsetUnitMathDecimal(_TestOffsetUnitMath):
-    kwargs = dict(non_int_type=Decimal)
+    kwargs = {"non_int_type": Decimal}
 
 
 class TestNonIntTypeQuantityFraction(_TestBasic):
-    kwargs = dict(non_int_type=Fraction)
+    kwargs = {"non_int_type": Fraction}
     SUPPORTS_NAN = False
 
 
 class TestNonIntTypeQuantityBasicMathFraction(_TestQuantityBasicMath):
-    kwargs = dict(non_int_type=Fraction)
+    kwargs = {"non_int_type": Fraction}
 
 
 class TestNonIntTypeOffsetUnitMathFraction(_TestOffsetUnitMath):
-    kwargs = dict(non_int_type=Fraction)
+    kwargs = {"non_int_type": Fraction}

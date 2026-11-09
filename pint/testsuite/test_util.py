@@ -156,7 +156,7 @@ class TestToUnitsContainer:
         assert to_units_container(Unit(UnitsContainer(m=1))) == UnitsContainer(m=1)
 
     def test_dict_conversion(self):
-        assert to_units_container(dict(m=1)) == UnitsContainer(m=1)
+        assert to_units_container({"m": 1}) == UnitsContainer(m=1)
 
 
 class TestParseHelper:
@@ -173,9 +173,9 @@ class TestParseHelper:
 
         assert ParserHelper(2) == 2
 
-        assert x() == dict(meter=2)
+        assert x() == {"meter": 2}
         assert x() == "meter ** 2"
-        assert y() != dict(meter=2)
+        assert y() != {"meter": 2}
         assert y() != "meter ** 2"
 
         assert xp() != object()
@@ -196,7 +196,7 @@ class TestParseHelper:
 
         assert 4.0 / z() == ParserHelper(2.0, meter=-2)
         assert "seconds" / z() == ParserHelper(0.5, seconds=1, meter=-2)
-        assert dict(seconds=1) / z() == ParserHelper(0.5, seconds=1, meter=-2)
+        assert {"seconds": 1} / z() == ParserHelper(0.5, seconds=1, meter=-2)
 
     def _test_eval_token(self, expected, expression):
         token = next(pint_eval.tokenizer(expression))

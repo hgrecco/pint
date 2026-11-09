@@ -31,7 +31,7 @@ from .helpers import internal
 
 # TODO: do not subclass from QuantityTestCase
 class TestIssues(QuantityTestCase):
-    kwargs = dict(autoconvert_offset_to_baseunit=False)
+    kwargs = {"autoconvert_offset_to_baseunit": False}
 
     @pytest.mark.xfail
     def test_issue25(self, module_registry):
@@ -1306,7 +1306,7 @@ def test_issue_1845():
     "units,spec,expected",
     [
         # (dict(hour=1, watt=1), "P~", "W⋅h"),
-        (dict(ampere=1, volt=1), "P~", "V⋅A"),
+        ({"ampere": 1, "volt": 1}, "P~", "V⋅A"),
         # (dict(meter=1, newton=1), "P~", "N⋅m"),
     ],
 )
