@@ -693,7 +693,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             self._units[name] = UnitDefinition(
                 name,
                 symbol,
-                tuple(),
+                (),
                 prefix_def.converter,
                 self.UnitsContainer({unit_name: 1}),
             )
@@ -924,9 +924,10 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
             pass
 
         accumulators: dict[str | None, int] = defaultdict(int)
-        fraction: dict[str, dict[Decimal | float, Decimal | int]] = dict(
-            numerator=dict(), denominator=dict()
-        )
+        fraction: dict[str, dict[Decimal | float, Decimal | int]] = {
+            "numerator": {},
+"denominator": {},
+        }
         self._get_root_units_recurse(input_units, 1, accumulators, fraction)
 
         # Identify if terms appear in both numerator and denominator
