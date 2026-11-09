@@ -815,6 +815,17 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         # Special case for logarithmic units: dB can be added to dBm, dBW, etc.
         # Get non-multiplicative units before checking dimensionality
         self_non_mul_units = self._get_non_multiplicative_units()
+        same_multiplicative_units = (
+            not self_non_mul_units and self._units == other._units
+        )
+        if (
+            same_multiplicative_units
+            and type(self) is type(other) is self._REGISTRY.Quantity
+        ):
+            # The operands use the same registry and multiplicative units.
+            # Keep the normal constructor for the result.
+            return self.__class__(op(self._magnitude, other._magnitude), self._units)
+
         other_non_mul_units = other._get_non_multiplicative_units()
 
         # Next we define some variables to make if-clauses more readable.
@@ -852,7 +863,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
         # Presence of non-multiplicative units gives rise to several cases.
         if is_self_multiplicative and is_other_multiplicative:
-            if self._units == other._units:
+            if same_multiplicative_units:
                 magnitude = op(self._magnitude, other._magnitude)
                 units = self._units
             # If only self has a delta unit, other determines unit of result.
