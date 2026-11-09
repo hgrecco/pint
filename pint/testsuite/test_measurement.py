@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import operator
+
 import pytest
 
 from pint import DimensionalityError
+from pint.compat import np
 from pint.testsuite import QuantityTestCase, helpers
 
 
@@ -18,6 +21,29 @@ class TestNotMeasurement(QuantityTestCase):
 # TODO: do not subclass from QuantityTestCase
 @helpers.requires_uncertainties()
 class TestMeasurement(QuantityTestCase):
+    @helpers.requires_numpy()
+    @pytest.mark.parametrize(
+        ("operation", "expected", "std_dev", "unit"),
+        [
+            (operator.add, [3, 4], [0.1, 0.1], "joule"),
+            (operator.sub, [1, 0], [0.1, 0.1], "joule"),
+            (operator.mul, [2, 4], [0.1, 0.2], "joule ** 2"),
+            (operator.truediv, [2, 1], [0.1, 0.05], "dimensionless"),
+        ],
+    )
+    def test_arithmetic_with_quantity_array(self, operation, expected, std_dev, unit):
+        from uncertainties import unumpy
+
+        measured = self.Q_(2, "joule").plus_minus(0.1)
+        array = self.Q_(np.array([1.0, 2.0]), "joule")
+
+        result = operation(measured, array)
+
+        assert isinstance(result, self.Q_)
+        assert result.units == self.ureg.Unit(unit)
+        np.testing.assert_allclose(unumpy.nominal_values(result.magnitude), expected)
+        np.testing.assert_allclose(unumpy.std_devs(result.magnitude), std_dev)
+
     def test_simple(self):
         M_ = self.ureg.Measurement
         m = M_(4.0, 0.1, "s * s")
