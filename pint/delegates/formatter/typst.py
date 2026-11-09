@@ -83,7 +83,7 @@ def matrix_to_typst(
 def ndarray_to_typst_parts(
     ndarr: ndarray,
     fmtfun: FORMATTER = "{:.2n}".format,
-    dim: tuple[int, ...] = tuple(),
+    dim: tuple[int, ...] = (),
     zero: bool = False,
 ) -> list[str]:
     """Convert an numpy array into an iterable of elements to be print.
@@ -119,7 +119,7 @@ def ndarray_to_typst_parts(
 def ndarray_to_typst(
     ndarr: ndarray,
     fmtfun: FORMATTER | str = "{:.2n}".format,
-    dim: tuple[int, ...] = tuple(),
+    dim: tuple[int, ...] = (),
     zero: bool = False,
 ) -> str:
     """Format a numpy array into string."""
