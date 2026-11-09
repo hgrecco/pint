@@ -12,7 +12,8 @@ import copy
 import re
 
 from ..._typing import Magnitude
-from ...compat import ufloat
+from ...compat import ndarray, ufloat
+from ...util import UnitsContainer
 from ..plain import PlainQuantity, PlainUnit
 
 MISSING = object()
@@ -53,6 +54,14 @@ class Measurement(PlainQuantity):
 
     def __new__(cls, value, error=MISSING, units=MISSING):
         if units is MISSING:
+            # Quantity arithmetic reconstructs the result as (magnitude, units).
+            # An array already holds each element's uncertainty and cannot be
+            # represented by a scalar Measurement.
+            if isinstance(value, ndarray) and isinstance(error, UnitsContainer):
+                from ... import application_registry
+
+                registry = getattr(cls, "_REGISTRY", application_registry)
+                return registry.Quantity(value, error)
             try:
                 value, units = value.magnitude, value.units
             except AttributeError:
