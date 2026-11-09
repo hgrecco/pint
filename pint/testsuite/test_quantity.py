@@ -2342,6 +2342,24 @@ class TestCompareNeutral(QuantityTestCase):
         assert not (q2 == 0)
         assert not (q0 == ureg.Quantity(0, ""))
 
+    def test_offset_zero_equal_offset_zero(self):
+        # Zero in one offset unit is not zero in another one.
+        Q_ = self.Q_
+        assert not (Q_(0, "degC") == Q_(0, "degF"))
+        assert Q_(0, "degC") != Q_(0, "degF")
+        assert not (Q_(0, "degC") == Q_(0, "kelvin"))
+        assert not (Q_(0, "kelvin") == Q_(0, "degF"))
+        assert Q_(0, "degC") == Q_(0, "degC")
+        assert Q_(0, "kelvin") == Q_(0, "degR")
+        assert Q_(0, "delta_degC") == Q_(0, "delta_degF")
+
+    @helpers.requires_numpy
+    def test_offset_zero_equal_offset_zero_NP(self):
+        np.testing.assert_array_equal(
+            self.Q_(np.zeros(2), "degC") == self.Q_(np.zeros(2), "degF"),
+            np.array([False, False]),
+        )
+
     def test_gt_zero(self):
         self.ureg.autoconvert_offset_to_baseunit = False
         q0 = self.Q_(0, "J")
