@@ -821,10 +821,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         if (
             same_multiplicative_units
             and type(self) is type(other) is self._REGISTRY.Quantity
-            and self.dimensionality == other.dimensionality
         ):
             # The operands use the same registry and multiplicative units.
-            # Keep the normal constructor and dimensionality validation.
+            # Keep the normal constructor for the result.
             return self.__class__(op(self._magnitude, other._magnitude), self._units)
 
         other_non_mul_units = other._get_non_multiplicative_units()
