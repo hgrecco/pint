@@ -13,24 +13,24 @@ VERSION = 'version = "1.0"\n'
 
 def summary(ureg):
     """Everything a definitions file contributes to a registry."""
-    return dict(
-        units={
+    return {
+        "units": {
             d.name: (d.defined_symbol, d.aliases, d.converter, d.reference)
             for d in ureg._units.values()
         },
-        prefixes={d.name: (d.value, d.aliases) for d in ureg._prefixes.values()},
-        dimensions={
+        "prefixes": {d.name: (d.value, d.aliases) for d in ureg._prefixes.values()},
+        "dimensions": {
             d.name: getattr(d, "reference", None) for d in ureg._dimensions.values()
         },
-        groups={name: sorted(g.members) for name, g in ureg._groups.items()},
-        systems={name: sorted(s.base_units) for name, s in ureg._systems.items()},
-        contexts={
+        "groups": {name: sorted(g.members) for name, g in ureg._groups.items()},
+        "systems": {name: sorted(s.base_units) for name, s in ureg._systems.items()},
+        "contexts": {
             name: (sorted(c.defaults.items()), sorted(map(str, c.funcs)))
             for name, c in ureg._contexts.items()
         },
-        defaults=ureg._defaults,
-        default_system=ureg.default_system,
-    )
+        "defaults": ureg._defaults,
+        "default_system": ureg.default_system,
+    }
 
 
 def test_default_toml_matches_txt():
