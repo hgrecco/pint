@@ -658,6 +658,14 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         helpers.assert_quantity_almost_equal(x, self.Q_([1, 1], "s / m"))
         helpers.assert_quantity_almost_equal(np.dot(A, x), b)
 
+    def test_tensorsolve_positional_args(self):
+        A = self.q
+        b = [3, 7] * self.ureg.s
+        x = np.linalg.tensorsolve(A, b, (0,))
+        helpers.assert_quantity_almost_equal(
+            x, self.Q_(np.linalg.tensorsolve(A.magnitude, b.magnitude, (0,)), "s / m")
+        )
+
     def test_tensorsolve_offset(self):
         with pytest.raises(OffsetUnitCalculusError):
             np.linalg.solve(self.q_temperature, [1, 1])
