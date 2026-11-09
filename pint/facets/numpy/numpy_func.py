@@ -1017,12 +1017,12 @@ def implement_solve_func(func):
         return
 
     @implements(func_str, "function")
-    def implementation(a, b, **kwargs):
+    def implementation(a, b, *args, **kwargs):
         a, b = _dimensionless_if_needed(a, b)
         a = _base_unit_if_needed(a)
         b = _base_unit_if_needed(b)
         units = b.units / a.units
-        mag = func(a._magnitude, b._magnitude, **kwargs)
+        mag = func(a._magnitude, b._magnitude, *args, **kwargs)
         return mag * units
 
 
