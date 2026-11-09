@@ -8,7 +8,8 @@ pint.facets.nonmultiplicative.registry
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+import pathlib
+from typing import TYPE_CHECKING, Any, Iterable
 
 from ...compat import TypeAlias
 from ...errors import DimensionalityError, UndefinedUnitError
@@ -43,11 +44,13 @@ class GenericNonMultiplicativeRegistry[QuantityT: Quantity, UnitT: Unit](
 
     def __init__(
         self,
+        filename: Iterable[str] | str | pathlib.Path | None = "",
+        *,
         default_as_delta: bool = True,
         autoconvert_offset_to_baseunit: bool = False,
         **kwargs: Any,
     ) -> None:
-        super().__init__(**kwargs)
+        super().__init__(filename, **kwargs)
 
         #: When performing a multiplication of units, interpret
         #: non-multiplicative units as their *delta* counterparts.
