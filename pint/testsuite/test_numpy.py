@@ -1345,6 +1345,28 @@ class TestNumpyUnclassified(TestNumpyMethods):
         with pytest.raises(DimensionalityError):
             q[0] = self.Q_(1.0, "s")
 
+    def test_clip_put_searchsorted_other_registry(self, sess_registry):
+        # bounds and values from another registry are converted, as in
+        # ``to`` and ``__setitem__``, instead of being taken for plain numbers.
+        other = sess_registry.Quantity
+
+        q = self.Q_([[1.0, 2.0], [3.0, 4.0]], "m")
+        helpers.assert_quantity_equal(
+            q.clip(min=other(2, "m"), max=other(300, "cm")),
+            [[2, 2], [3, 3]] * self.ureg.m,
+        )
+
+        q = [1.0, 2.0, 3.0, 4.0] * self.ureg.m
+        q.put([0, 2], other([1.0, 2.0], "mm"))
+        helpers.assert_quantity_equal(q, [0.001, 2.0, 0.002, 4.0] * self.ureg.m)
+
+        self.assertNDArrayEqual(
+            self.q.flatten().searchsorted(other([1.5, 2.5], "m")), np.array([1, 2])
+        )
+
+        with pytest.raises(DimensionalityError):
+            self.q.clip(min=other(1, "s"))
+
     def test_iterator(self):
         for q, v in zip(self.q.flatten(), [1, 2, 3, 4]):
             assert q == v * self.ureg.m
