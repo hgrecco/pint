@@ -1075,7 +1075,7 @@ def to_units_container(
     -------
     UnitsContainer
     """
-    mro = type(unit_like).mro()
+    mro = type(unit_like).__mro__
     if UnitsContainer in mro:
         return unit_like
     elif SharedRegistryObject in mro:
