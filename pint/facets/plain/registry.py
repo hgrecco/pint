@@ -1234,27 +1234,44 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
 
         stw = unit_name.startswith
         edw = unit_name.endswith
-        for suffix, prefix in itertools.product(self._suffixes, self._prefixes):
-            if stw(prefix) and edw(suffix):
-                name = unit_name[len(prefix) :]
-                if suffix:
-                    name = name[: -len(suffix)]
-                    if len(name) == 1:
-                        continue
-                if case_sensitive:
-                    if name in self._units:
-                        yield (
-                            self._prefixes[prefix].name,
-                            self._units[name].name,
-                            self._suffixes[suffix],
-                        )
-                else:
-                    for real_name in self._units_casei.get(name.lower(), ()):
-                        yield (
-                            self._prefixes[prefix].name,
-                            self._units[real_name].name,
-                            self._suffixes[suffix],
-                        )
+
+        def _candidates(
+            case_sensitive_lookup: bool,
+        ) -> Generator[tuple[str, str, str]]:
+            for suffix, prefix in itertools.product(self._suffixes, self._prefixes):
+                if stw(prefix) and edw(suffix):
+                    name = unit_name[len(prefix) :]
+                    if suffix:
+                        name = name[: -len(suffix)]
+                        if len(name) == 1:
+                            continue
+                    if case_sensitive_lookup:
+                        if name in self._units:
+                            yield (
+                                self._prefixes[prefix].name,
+                                self._units[name].name,
+                                self._suffixes[suffix],
+                            )
+                    else:
+                        for real_name in self._units_casei.get(name.lower(), ()):
+                            yield (
+                                self._prefixes[prefix].name,
+                                self._units[real_name].name,
+                                self._suffixes[suffix],
+                            )
+
+        if case_sensitive:
+            yield from _candidates(True)
+        else:
+            # Try an exact, case-sensitive match for every prefix/suffix split
+            # first, so that e.g. "km" resolves to kilometer instead of
+            # kilomolar (whose symbol is "M"), which the case-insensitive
+            # lookup would otherwise race with.
+            exact = list(_candidates(True))
+            if exact:
+                yield from exact
+            else:
+                yield from _candidates(False)
 
     # TODO: keep this for backward compatibility
     _parse_unit_name = _yield_unit_triplets

@@ -1199,6 +1199,23 @@ class TestCaseInsensitiveRegistry(QuantityTestCase):
         )
         assert ureg.parse_units("j", case_sensitive=False) == UnitsContainer(joule=1)
 
+    def test_case_insensitive_prefers_exact_matches(self):
+        # gh-2248: with case_sensitive=False, "km" used to resolve to
+        # kilomolar (symbol "M") because the case-insensitive lookup raced
+        # with the exact "m" match. An exact, case-sensitive match for any
+        # prefix/suffix split must always win.
+        ureg = self.ureg
+        for _ in range(10):
+            assert ureg.parse_units("km") == UnitsContainer(kilometer=1)
+            assert ureg.parse_unit_name("km") == (("kilo", "meter", ""),)
+            assert ureg.get_name("km") == "kilometer"
+            assert ureg.get_symbol("km") == "km"
+        # Units whose case-insensitive lookup is ambiguous in the other
+        # direction still resolve through the fallback.
+        assert ureg.parse_units("M") == UnitsContainer(molar=1)
+        assert ureg.parse_units("Meter") == UnitsContainer(meter=1)
+        assert ureg.parse_units("j") == UnitsContainer(joule=1)
+
 
 # TODO: do not subclass from QuantityTestCase
 class TestCompatibleUnits(QuantityTestCase):
