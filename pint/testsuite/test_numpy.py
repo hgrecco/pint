@@ -14,6 +14,112 @@ from pint.testsuite.test_umath import TestUFuncs
 
 
 @helpers.requires_numpy
+@pytest.mark.parametrize("func", ["prod", "nanprod", "method"])
+@pytest.mark.parametrize("keepdims", [False, True])
+@pytest.mark.parametrize(
+    "axis, where, exponent",
+    [
+        (None, None, 12),
+        (None, True, 12),
+        (None, False, 0),
+        (None, [True, False, True], 8),
+        (None, [[True], [False]], 6),
+        ((0, 1, 2), None, 12),
+        ((2, 0, 1), None, 12),
+        ((-3, -1), None, 6),
+        ((0,), None, 2),
+        ((), None, 1),
+        ((0, 2), None, 6),
+        ((0, 2), [True, False, True], 4),
+        ((), True, 1),
+        ((), False, 0),
+        (0, [True, False, True], 2),
+    ],
+)
+def test_prod_reduction_factor_count(
+    sess_registry, func, keepdims, axis, where, exponent
+):
+    magnitude = np.arange(1, 13).reshape(2, 2, 3)
+    quantity = sess_registry.Quantity(magnitude, "meter")
+    kwargs = {"axis": axis, "keepdims": keepdims}
+    if where is not None:
+        kwargs["where"] = where
+
+    if func == "method":
+        result = quantity.prod(**kwargs)
+    else:
+        result = getattr(np, func)(quantity, **kwargs)
+
+    expected = sess_registry.Quantity(
+        np.prod(magnitude, **kwargs), sess_registry.meter**exponent
+    )
+    helpers.assert_quantity_equal(result, expected)
+    assert result.shape == expected.shape
+
+
+@helpers.requires_numpy
+@pytest.mark.parametrize("func", ["prod", "nanprod", "method"])
+@pytest.mark.parametrize(
+    "axis, where, exponent",
+    [
+        ((0, 2), None, 0),
+        ((1, 2), None, 6),
+        ((), None, 1),
+        (None, True, 0),
+        (None, False, 0),
+    ],
+)
+def test_prod_reduction_empty(sess_registry, func, axis, where, exponent):
+    magnitude = np.empty((0, 2, 3))
+    quantity = sess_registry.Quantity(magnitude, "meter")
+    kwargs = {"axis": axis}
+    if where is not None:
+        kwargs["where"] = where
+
+    if func == "method":
+        result = quantity.prod(**kwargs)
+    else:
+        result = getattr(np, func)(quantity, **kwargs)
+
+    expected = sess_registry.Quantity(
+        np.prod(magnitude, **kwargs), sess_registry.meter**exponent
+    )
+    helpers.assert_quantity_equal(result, expected)
+    assert result.shape == expected.shape
+
+
+@helpers.requires_numpy
+@pytest.mark.parametrize("func", ["prod", "nanprod", "method"])
+@pytest.mark.parametrize("axis", [(0,), (0, 1)])
+def test_prod_reduction_heterogeneous_units(sess_registry, func, axis):
+    quantity = sess_registry.Quantity(np.arange(1, 13).reshape(2, 2, 3), "meter")
+    where = [[[True, True, True], [True, True, True]], [[True, False, True]] * 2]
+
+    with pytest.raises(DimensionalityError):
+        if func == "method":
+            quantity.prod(axis=axis, where=where)
+        else:
+            getattr(np, func)(quantity, axis=axis, where=where)
+
+
+@helpers.requires_numpy
+@pytest.mark.parametrize("func", ["prod", "nanprod", "method"])
+@pytest.mark.parametrize("axis", [(0, 0), (0, -2)])
+@pytest.mark.parametrize("where", [None, True])
+def test_prod_reduction_duplicate_axes(sess_registry, func, axis, where):
+    quantity = sess_registry.Quantity([[1, 2], [3, 4]], "meter")
+    kwargs = {"axis": axis}
+    if where is not None:
+        kwargs["where"] = where
+
+    with pytest.raises(ValueError, match="duplicate value in 'axis'"):
+        if func == "method":
+            quantity.prod(**kwargs)
+        else:
+            getattr(np, func)(quantity, **kwargs)
+
+
+@helpers.requires_numpy
 class TestNumpyMethods:
     @classmethod
     def setup_class(cls):
