@@ -867,7 +867,7 @@ def implement_prod_func(name):
 
         registry = a.units._REGISTRY
 
-        if axis is not None and where is not None:
+        if where is not None:
             _, where_ = np.broadcast_arrays(a._magnitude, where)
             exponents = np.unique(np.sum(where_, axis=axis))
             if len(exponents) == 1 or (len(exponents) == 2 and 0 in exponents):
@@ -876,9 +876,8 @@ def implement_prod_func(name):
                 units = registry.dimensionless
                 a = a.to(units)
         elif axis is not None:
-            units = a.units ** a.shape[axis]
-        elif where is not None:
-            exponent = np.sum(where)
+            axes = axis if isinstance(axis, tuple) else (axis,)
+            exponent = np.prod([a.shape[ax] for ax in axes], dtype=int)
             units = a.units**exponent
         else:
             exponent = (
