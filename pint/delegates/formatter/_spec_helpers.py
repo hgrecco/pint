@@ -57,6 +57,31 @@ def parse_spec(spec: str) -> str:
     return result
 
 
+_CENTER_ALIGN_CARET_RE = re.compile(r"^(?:[^<>=^]?\^)(?=\d)")
+
+
+def _split_alignment_prefix(spec: str) -> tuple[str, str]:
+    """Split off a leading fill+``^`` center-alignment prefix, if any.
+
+    ``^`` is overloaded: it is Python's center-alignment character and also a
+    Pint unit modifier meaning "use negative exponents". It only is an
+    alignment character when it appears in the alignment position and is
+    followed by a width.
+    """
+
+    match = _CENTER_ALIGN_CARET_RE.match(spec)
+    if match is None:
+        return "", spec
+    return match.group(0), spec[match.end() :]
+
+
+def has_negative_exponent_flag(spec: str) -> bool:
+    """Return True if the spec contains the ``^`` unit modifier."""
+
+    _, rest = _split_alignment_prefix(spec)
+    return "^" in rest
+
+
 def extract_custom_flags(spec: str) -> str:
     """Return custom flags present in a format specification
 
@@ -65,6 +90,8 @@ def extract_custom_flags(spec: str) -> str:
 
     if not spec:
         return ""
+
+    _, spec = _split_alignment_prefix(spec)
 
     # sort by length, with longer items first
     known_flags = sorted(REGISTERED_FORMATTERS.keys(), key=len, reverse=True)
@@ -81,6 +108,8 @@ def remove_custom_flags(spec: str) -> str:
     (i.e those not part of Python's formatting mini language)
     """
 
+    prefix, spec = _split_alignment_prefix(spec)
+
     for flag in sorted(REGISTERED_FORMATTERS.keys(), key=len, reverse=True) + [
         "~",
         "^",
@@ -88,7 +117,7 @@ def remove_custom_flags(spec: str) -> str:
     ]:
         if flag:
             spec = spec.replace(flag, "")
-    return spec
+    return prefix + spec
 
 
 # Regex for the Python format specification mini-language:

@@ -20,6 +20,7 @@ from ...compat import Unpack, babel_parse
 from ...util import iterable
 from ._compound_unit_helpers import BabelKwds
 from ._to_register import REGISTERED_FORMATTERS
+from ._spec_helpers import has_negative_exponent_flag
 from .html import HTMLFormatter
 from .latex import LatexFormatter, SIunitxFormatter
 from .plain import (
@@ -183,7 +184,7 @@ class FullFormatter(BaseFormatter):
             use_plural=use_plural,
             length=babel_kwds.get("length", None),
             locale=locale,
-            as_ratio=False if "^" in spec else True,
+            as_ratio=False if has_negative_exponent_flag(spec) else True,
         )
 
     def format_measurement(
