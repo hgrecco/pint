@@ -36,7 +36,9 @@ from pint.testsuite.test_umath import TestUFuncs
         (0, [True, False, True], 2),
     ],
 )
-def test_prod_reduction_factor_count(sess_registry, func, keepdims, axis, where, exponent):
+def test_prod_reduction_factor_count(
+    sess_registry, func, keepdims, axis, where, exponent
+):
     magnitude = np.arange(1, 13).reshape(2, 2, 3)
     quantity = sess_registry.Quantity(magnitude, "meter")
     kwargs = {"axis": axis, "keepdims": keepdims}
