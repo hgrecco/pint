@@ -33,11 +33,11 @@ else:
 
 def _power(left: Any, right: Any) -> Any:
     from . import Quantity
-    from .compat import is_duck_array
+    from .compat import is_ndarray_or_duck
 
     if (
         isinstance(left, Quantity)
-        and is_duck_array(left.magnitude)
+        and is_ndarray_or_duck(left.magnitude)
         and left.dtype.kind not in "cf"
         and right < 0
     ):

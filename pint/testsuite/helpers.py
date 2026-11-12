@@ -4,6 +4,7 @@ import contextlib
 import doctest
 import pickle
 import re
+from typing import TYPE_CHECKING
 
 import pytest
 from packaging.version import parse as version_parse
@@ -139,6 +140,16 @@ requires_not_uncertainties = pytest.mark.skipif(
     HAS_UNCERTAINTIES, reason="Requires Uncertainties not to be installed."
 )
 requires_scipy = pytest.mark.skipif(not HAS_SCIPY, reason="Requires scipy")
+
+try:
+    import array_api_strict
+except ModuleNotFoundError:
+    assert not TYPE_CHECKING
+    array_api_strict = None
+
+requires_array_api_strict = pytest.mark.skipif(
+    array_api_strict is None, reason="Requires array-api-strict"
+)
 
 # Parametrization
 
