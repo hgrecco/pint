@@ -5,6 +5,7 @@ Pint Changelog
 -------------------
 
 - Add `array-api-compat` as an optional dependency (#2554)
+- Fix `Quantity(0, "degC") == Quantity(0, "degF")` and similar comparisons of zero in different offset units returning `True` (#2555)
 - Deprecate `pint.util.matrix_to_string`, which is unused (#2547)
 - Fix parsing `.` as multiplication between units, e.g. `J/(kg.K)` (#2543)
 - Load definitions from TOML files; `pint/default_en.toml` holds the default definitions (#2526)

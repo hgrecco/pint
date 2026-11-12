@@ -1680,7 +1680,14 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             return bool_result(False)
 
         # TODO: this might be expensive. Do we even need it?
-        if eq(self._magnitude, 0, True) and eq(other._magnitude, 0, True):
+        # Zero is only zero in every unit of a dimension when the units are
+        # multiplicative: 0 degC and 0 degF are different temperatures.
+        if (
+            self._is_multiplicative
+            and other._is_multiplicative
+            and eq(self._magnitude, 0, True)
+            and eq(other._magnitude, 0, True)
+        ):
             return bool_result(self.dimensionality == other.dimensionality)
 
         if self._units == other._units:
