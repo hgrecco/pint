@@ -300,11 +300,13 @@ def _get_preferred(
                     s_exps_tail[i] * p_exps_head == p_exps_tail[i] * s_exps_head
                     for i in range(n)
                 ):
-                    ratio = p_exps_head / s_exps_head
-                    ratio = max(ratio, 1 / ratio)
+                    exponent = s_exps_head / p_exps_head
+                    # Prefer the exponent closest to 1 in magnitude, and a
+                    # positive exponent over a negative one (e.g. Hz over 1/s).
+                    ratio = (max(abs(exponent), 1 / abs(exponent)), exponent < 0)
                     if best_ratio is None or ratio < best_ratio:
                         best_ratio = ratio
-                        best_unit = preferred_unit ** (s_exps_head / p_exps_head)
+                        best_unit = preferred_unit**exponent
         return best_unit
 
     simple = find_simple()

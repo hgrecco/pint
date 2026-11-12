@@ -501,6 +501,23 @@ class TestQuantity(QuantityTestCase):
         result = q.to_preferred([ureg.Unit("m**2 * s**2")])
         assert result.to_base_units() == q.to_base_units()
 
+    @pytest.mark.parametrize(
+        ("quantity", "preferred", "expected"),
+        [
+            ("1 Hz", ["Hz", "s"], "Hz"),
+            ("1 Hz", ["s", "Hz"], "Hz"),
+            ("1 m/s", ["km/hour", "s/m"], "km/hour"),
+            ("1 m**-3", ["L", "m**-3"], "m**-3"),
+            # the inverse is still used when nothing better is available
+            ("1 Hz", ["s"], "s**-1"),
+        ],
+    )
+    def test_to_preferred_prefers_exact_match_over_inverse(
+        self, quantity, preferred, expected
+    ):
+        result = self.Q_(quantity).to_preferred(preferred)
+        assert result.units == self.ureg.Unit(expected)
+
     def test_to_preferred_accepts_unitlike_strings(self):
         ureg = self.ureg
         q = self.Q_("1 g")
