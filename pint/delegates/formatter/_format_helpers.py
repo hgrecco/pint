@@ -97,10 +97,21 @@ def override_locale(
             setlocale(LC_NUMERIC, prev_locale_string)
 
 
+def fmt_exponent(num: Number) -> str:
+    """Format an exponent with the ``n`` format spec.
+
+    `Fraction` does not support ``n``, so a `Fraction` exponent (from
+    ``non_int_type=Fraction``) is formatted like the equivalent int or float.
+    """
+    if isinstance(num, Fraction):
+        num = int(num) if num.denominator == 1 else float(num)
+    return f"{num:n}"
+
+
 def pretty_fmt_exponent(num: Number) -> str:
     """Format an number into a pretty printed exponent."""
     # unicode dot operator (U+22C5) looks like a superscript decimal
-    ret = f"{num:n}".replace("-", "⁻").replace(".", "\u22c5")
+    ret = fmt_exponent(num).replace("-", "⁻").replace(".", "\u22c5")
     for n in range(10):
         ret = ret.replace(str(n), _PRETTY_EXPONENTS[n])
     return ret
@@ -185,7 +196,7 @@ def formatter(
     division_fmt: str = " / ",
     power_fmt: str = "{} ** {}",
     parentheses_fmt: str = "({0})",
-    exp_call: FORMATTER = "{:n}".format,
+    exp_call: FORMATTER = fmt_exponent,
 ) -> str:
     """Format a list of (name, exponent) pairs.
 
@@ -209,7 +220,7 @@ def formatter(
     parentheses_fmt : str
         the format used for parenthesis. (Default value = "({0})")
     exp_call : callable
-         (Default value = lambda x: f"{x:n}")
+         (Default value = fmt_exponent)
 
     Returns
     -------

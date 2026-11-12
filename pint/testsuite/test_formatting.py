@@ -4,6 +4,7 @@ from fractions import Fraction
 
 import pytest
 
+import pint
 import pint.formatting as fmt
 from pint.compat import np
 from pint.testsuite import helpers
@@ -103,6 +104,17 @@ def test_format_unit_fraction_exponent(func_registry):
     # An exact Fraction exponent renders the same as the equivalent float.
     u3 = func_registry.Unit("second") ** Fraction(3, 2)
     assert format(u3, "~/P") == "s³ᐟ²"
+
+
+@pytest.mark.parametrize("spec", ["", "~", "P", "~P", "L", "H", "C", "D", "~T"])
+def test_format_unit_fraction_exponent_non_int_type(spec):
+    """With non_int_type=Fraction, a Fraction exponent formats like the
+    equivalent float exponent instead of raising ValueError (#2386).
+    """
+    expr = "m**2.3 / s**(1/3) * kg**2"
+    fraction_ureg = pint.UnitRegistry(non_int_type=Fraction)
+    float_ureg = pint.UnitRegistry()
+    assert format(fraction_ureg.Unit(expr), spec) == format(float_ureg.Unit(expr), spec)
 
 
 def test_format_unit_fraction_exponent_absorbs_noise(func_registry):
