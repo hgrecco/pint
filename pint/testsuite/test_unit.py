@@ -1288,6 +1288,12 @@ class TestRegistryWithDefaultRegistry(TestRegistry):
         with pytest.raises(RedefinitionError):
             d("myk- = 1000 = kilo-")
 
+    def test_pct_is_percent(self):
+        # pct is a common abbreviation of percent, not pico-carat (#2478)
+        assert self.ureg.Unit("pct") == self.ureg.Unit("percent")
+        q = self.ureg.Quantity(45, "pct")
+        assert q.to("dimensionless").magnitude == pytest.approx(0.45)
+
 
 # TODO: remove QuantityTestCase
 class TestConvertWithOffset(QuantityTestCase):
