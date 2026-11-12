@@ -134,6 +134,14 @@ class GenericContextRegistry[QuantityT: Quantity, UnitT: Unit](
         with self._writing_to_plain_units():
             return super().load_definitions(file, is_resource, rebuild_cache)
 
+    def get_name(self, name_or_alias: str, case_sensitive: bool | None = None) -> str:
+        if len(self._units.maps) == 1 or name_or_alias in self._units:
+            return super().get_name(name_or_alias, case_sensitive)
+        # A prefixed unit created here is cached in self._units. Cache it in the
+        # plain units, or it is lost with the context overlay on exit (#2389).
+        with self._writing_to_plain_units():
+            return super().get_name(name_or_alias, case_sensitive)
+
     @contextmanager
     def _writing_to_plain_units(self) -> Generator[None]:
         """Write definitions to the plain units, not an active context overlay."""

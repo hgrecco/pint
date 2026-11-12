@@ -1146,3 +1146,22 @@ def test_redefining_context_cache_reused():
         assert ureg._cache is first
         assert ureg.Quantity(1, "inch").to("cm").magnitude == pytest.approx(2)
     assert ureg.Quantity(1, "inch").to("cm").magnitude == pytest.approx(2.54)
+
+
+def test_prefixed_unit_created_in_context_survives_exit():
+    # A prefixed unit first used while a redefining context is active is
+    # cached in the plain units, not in the context overlay (#2389)
+    ureg = UnitRegistry()
+    ureg.define("apple = [fruit]")
+    ctx = Context("c")
+    ctx.redefine("inch = 2 cm")
+    ureg.add_context(ctx)
+    with ureg.context("c"):
+        q = ureg.Quantity(1, "megaapple")
+        assert f"{q:~P}" == "1 Mapple"
+        assert ureg.Quantity(1, "inch").to("cm").magnitude == pytest.approx(2)
+    assert "megaapple" in internal(ureg)._units
+    assert f"{q:~P}" == "1 Mapple"
+    assert ureg.Quantity(1, "inch").to("cm").magnitude == pytest.approx(2.54)
+    with ureg.context("c"):
+        assert ureg.Quantity(1, "inch").to("cm").magnitude == pytest.approx(2)
