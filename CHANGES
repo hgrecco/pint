@@ -4,6 +4,7 @@ Pint Changelog
 0.26.3 (unreleased)
 -------------------
 
+- Fix formatting a `Unit` or `Quantity` with a `Fraction` exponent (`non_int_type=Fraction`) raising `ValueError`; it is formatted like the equivalent float exponent (#2386)
 - Fix `Quantity(0, "degC") == Quantity(0, "degF")` and similar comparisons of zero in different offset units returning `True` (#2555)
 - Deprecate `pint.util.matrix_to_string`, which is unused (#2547)
 - Fix parsing `.` as multiplication between units, e.g. `J/(kg.K)` (#2543)
