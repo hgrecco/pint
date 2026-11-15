@@ -1631,7 +1631,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     def __ne__(self, other):
         out = self.__eq__(other)
         if is_array_api_or_duck(out):
-            return np.logical_not(out)
+            return array_api_namespace(out).logical_not(out)
         return not out
 
     @check_implemented
