@@ -63,7 +63,7 @@ from ..._typing import (
     Scalar,
     UnitLike,
 )
-from ...compat import coerce_scalar, is_duck_array
+from ...compat import coerce_scalar, is_ndarray_or_duck
 from ...errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
@@ -1636,7 +1636,7 @@ class GenericPlainRegistry[QuantityT: PlainQuantity, UnitT: PlainUnit](
                 "Pint does not support boolean magnitudes because they are confusing: "
                 "please call `int()` or `float()` before interpreting the value as a magnitude."
             )
-        elif isinstance(value, Number) or is_duck_array(value):
+        elif isinstance(value, Number) or is_ndarray_or_duck(value):
             return cast(Magnitude, value)
         # handle clearly meaningless or unintended values
         elif isinstance(value, (dict, set, datetime.datetime, datetime.timedelta)):

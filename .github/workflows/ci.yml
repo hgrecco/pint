@@ -63,7 +63,9 @@ jobs:
 
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
-        run: pixi run -e ${{ matrix.environment }} pip install "${{matrix.numpy}}"
+        run: |
+          pixi run -e ${{ matrix.environment }} pip install "${{matrix.numpy}}"
+          pixi run -e ${{ matrix.environment }} pip install array-api-strict
 
       - name: Install uncertainties
         if: ${{ matrix.uncertainties != null }}
@@ -116,7 +118,9 @@ jobs:
         run: pixi add pip
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
-        run: pixi run -e ${{ matrix.environment }} pip install "${{matrix.numpy}}"
+        run: |
+          pixi run -e ${{ matrix.environment }} pip install "${{matrix.numpy}}"
+          pixi run -e ${{ matrix.environment }} pip install array-api-strict
       - run: pixi run --environment ${{ matrix.environment }} test
 
   test-macos:
@@ -139,7 +143,9 @@ jobs:
         run: pixi add pip
       - name: Install numpy
         if: ${{ matrix.numpy != null }}
-        run: pixi run -e ${{ matrix.environment }} pip install "${{matrix.numpy}}"
+        run: |
+          pixi run -e ${{ matrix.environment }} pip install "${{matrix.numpy}}"
+          pixi run -e ${{ matrix.environment }} pip install array-api-strict
       - run: pixi run --environment ${{ matrix.environment }} test
 
   publish:

@@ -3,7 +3,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from decimal import Decimal
 from fractions import Fraction
-from typing import TYPE_CHECKING, Any, Never, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
+
+from ._array_api_typing import Array, Shape  # noqa
 
 if TYPE_CHECKING:
     from .facets.plain import PlainQuantity as Quantity
@@ -24,20 +26,16 @@ try:
     import numpy as np
 
     type Scalar = _BuiltinScalar | np.number[Any]
-    type Array = np.ndarray[Any, Any]
 except ModuleNotFoundError:
     # NOTE: redefining type aliases is not officially supported and may lead to type checker misbehavior
     assert not TYPE_CHECKING
     type Scalar = _BuiltinScalar
-    type Array = Never
 
 type Magnitude = Scalar | Array
 
 type UnitLike = str | dict[str, Scalar] | UnitsContainer | Unit
 
 type QuantityOrUnitLike = Quantity[Any] | UnitLike
-
-type Shape = tuple[int, ...]
 
 type FuncType = Callable[..., Any]
 
