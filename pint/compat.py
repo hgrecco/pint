@@ -38,9 +38,6 @@ from warnings import deprecated  # noqa
 
 from ._array_api_typing import Array, ArrayAPIModule
 
-from ._array_typing import ArrayAPIModule
-from ._typing import Array
-
 
 def coerce_scalar(value, scalar):
     """Coerce a scalar (a conversion scale or offset) to be arithmetically
@@ -139,7 +136,7 @@ except ModuleNotFoundError:
     def has_array_api(x: object, /) -> TypeGuard[Array]:
         """Check if an object supports the Array API."""
         return hasattr(x, "__array_namespace__")
-  
+
     def array_api_namespace(x: Array, /) -> ArrayAPIModule:
         return x.__array_namespace__()  # pyright: ignore[reportReturnType]
 
@@ -166,25 +163,25 @@ def is_duck_array(obj: object, /) -> TypeGuard[Array]:
             or (hasattr(obj, "__array_priority__") and hasattr(obj, "shape"))
         )
     )
-  
-  
+
+
 def is_ndarray_or_duck(obj: object, /) -> TypeGuard[Array]:
     """Check if an object represents either a NumPy array (np.ndarray) or a (non-Quantity) duck array."""
     return (HAS_NUMPY and isinstance(obj, ndarray)) or is_duck_array(obj)
 
-  
+
 def is_array_api_or_duck(obj: object, /) -> TypeGuard[Array]:
     """Check if an object represents either an Array API array or a (non-Quantity) duck array."""
     return has_array_api(obj) or is_duck_array(obj)
 
-  
+
 def array_namespace_or_np(obj: Array, /) -> ArrayAPIModule:
     """Find the array namespace for the given array (via the Array API) or duck array (default: `numpy`)."""
     if has_array_api(obj):
         return array_api_namespace(obj)
     return numpy  # pyright: ignore[reportReturnType]
 
-  
+
 def array_size(array: Array, /) -> int | None:
     """Return the size (i.e. number of elements) of the given array (via the Array API) or duck array."""
     if has_array_api(array):
