@@ -43,6 +43,28 @@ def test_default_toml_matches_txt():
         )
 
 
+@pytest.mark.parametrize("filename", ["default_en.txt", "default_en.toml"])
+def test_standard_liter_per_minute_volumetric_flow(filename):
+    ureg = pint.UnitRegistry(PINT_DIR / filename)
+    for unit in ("standard_liter_per_minute", "slm"):
+        for magnitude in (0, 1, 2.5):
+            flow = ureg.Quantity(magnitude, unit)
+            assert flow.to("liter / minute").magnitude == pytest.approx(magnitude)
+            assert flow.to("meter ** 3 / second").magnitude == pytest.approx(
+                magnitude * 1e-3 / 60
+            )
+            assert flow.dimensionality == ureg.get_dimensionality(
+                "[volumetric_flow_rate]"
+            )
+        with pytest.raises(pint.DimensionalityError):
+            ureg.Quantity(1, unit).to("watt")
+    assert ureg.Quantity(1, "atmosphere * liter / minute").to(
+        "watt"
+    ).magnitude == pytest.approx(1.68875)
+    for unit in ("atm", "atmosphere"):
+        assert ureg.Quantity(1, unit).to("pascal").magnitude == 101325
+
+
 def test_numbers_keep_their_digits():
     # TOML floats are read as text, so they keep every digit and get the
     # registry's number type, as in the text format
