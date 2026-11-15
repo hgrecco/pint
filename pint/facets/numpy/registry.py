@@ -71,9 +71,8 @@ class GenericNumpyRegistry[QuantityT: Quantity, UnitT: Unit](
 
     @override
     def _normalize_magnitude(self, value: object, /) -> Magnitude | NotImplementedType:
-        # note: `np.ndarray`s are also duck arrays, while
-        #       `np.number` inherits from `numbers.Number`
-        #     => no need to check for those, they get already accepted by `PlainQuantity`
+        # NOTE: `np.ndarray` supports the Array API, while `np.number` inherits from `numbers.Number`
+        #   => no need to check for those, they get already accepted by `PlainQuantity`
         if (self.force_ndarray or self.force_ndarray_like) and not HAS_NUMPY:
             raise ValueError(
                 "Cannot force to ndarray or ndarray-like when NumPy is not present."
