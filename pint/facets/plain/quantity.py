@@ -161,14 +161,6 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             return 0
         return self.magnitude.ndim
 
-    @property
-    def force_ndarray(self) -> bool:
-        return self._REGISTRY.force_ndarray
-
-    @property
-    def force_ndarray_like(self) -> bool:
-        return self._REGISTRY.force_ndarray_like
-
     def __reduce__(
         self,
     ) -> tuple[

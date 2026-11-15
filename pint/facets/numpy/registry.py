@@ -8,6 +8,8 @@ pint.facets.numpy.registry
 
 from __future__ import annotations
 
+import pathlib
+from collections.abc import Iterable
 from types import NotImplementedType
 from typing import TYPE_CHECKING, Literal, overload, override
 
@@ -47,6 +49,21 @@ _DTYPE_TO_UNIT = {
 class GenericNumpyRegistry[QuantityT: Quantity, UnitT: Unit](
     GenericPlainRegistry[QuantityT, UnitT]
 ):
+    force_ndarray: bool
+    force_ndarray_like: bool
+
+    def __init__(
+        self,
+        filename: Iterable[str] | str | pathlib.Path | None = "",
+        *,
+        force_ndarray: bool = False,
+        force_ndarray_like: bool = False,
+        **kwargs,
+    ):
+        super().__init__(filename=filename, **kwargs)
+        self.force_ndarray = force_ndarray
+        self.force_ndarray_like = force_ndarray_like
+
     @overload
     def _into_ndarray_like(
         self, value: Magnitude, /, *, force_ndarray: Literal[True]
