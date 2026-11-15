@@ -1075,18 +1075,17 @@ def to_units_container(
     -------
     UnitsContainer
     """
-    mro = type(unit_like).__mro__
-    if UnitsContainer in mro:
+    if isinstance(unit_like, UnitsContainer):
         return unit_like
-    elif SharedRegistryObject in mro:
+    elif isinstance(unit_like, SharedRegistryObject):
         return unit_like._units
-    elif str in mro:
+    elif isinstance(unit_like, str):
         if registry:
             unit_like = registry._apply_preprocessors(unit_like)
             return registry.parse_units_as_container(unit_like)
         else:
             return ParserHelper.from_string(unit_like)
-    elif dict in mro:
+    elif isinstance(unit_like, dict):
         if registry:
             return registry.UnitsContainer(unit_like)
         else:
