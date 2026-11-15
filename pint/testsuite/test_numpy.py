@@ -1037,7 +1037,6 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.clip(self.q, 150 * self.ureg.cm, None), [[1.5, 2], [3, 4]] * self.ureg.m
         )
 
-    @helpers.requires_numpy_at_least("2.1")
     def test_clip_numpy_func_array_api_names(self):
         # numpy 2.1 added `min`/`max` as array-API compatible spellings of
         # `a_min`/`a_max`; they must get the same unit handling.

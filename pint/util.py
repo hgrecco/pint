@@ -39,7 +39,7 @@ from .errors import DefinitionSyntaxError
 from .pint_eval import build_eval_tree
 
 if TYPE_CHECKING:
-    from typing_extensions import TypeIs
+    from typing import TypeIs
 
     from ._typing import QuantityOrUnitLike
     from .facets.plain import GenericPlainRegistry
