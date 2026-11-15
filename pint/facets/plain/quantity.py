@@ -27,6 +27,7 @@ from typing import (
     overload,
 )
 
+from ..._array_api_typing import ArrayAPIModule
 from ..._typing import Magnitude, QuantityOrUnitLike, Scalar, UnitLike
 from ...compat import (
     HAS_NUMPY,
@@ -373,6 +374,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     @classmethod
     def from_list[T: np.floating | np.integer](
         cls: type[PlainQuantity[opt.numpy.Array1D[np.float64]]],
+        /,
         quant_list: list[
             PlainQuantity[np.floating]
             | PlainQuantity[np.integer]
@@ -380,8 +382,10 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             | PlainQuantity[int]
         ],
         units: UnitLike | None = None,
+        *,
+        xp: ArrayAPIModule | None = None,
     ) -> PlainQuantity[opt.numpy.Array1D[np.float64]]:
-        """Transforms a list of Quantities into an numpy.array quantity.
+        """Transforms a list of Quantities into an array quantity.
         If no units are specified, the unit of the first element will be used.
         Same as from_sequence.
 
@@ -394,16 +398,20 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             list of pint.PlainQuantity
         units : UnitsContainer, str or pint.PlainQuantity
             units of the physical quantity to be created (Default value = None)
+        xp : types.ModuleType or None
+            the Array API namespace used to construct the array
+            (if None, the default value, this function will use numpy if possible, or will raise an error)
 
         Returns
         -------
         pint.PlainQuantity
         """
-        return cls.from_sequence(quant_list, units=units)
+        return cls.from_sequence(quant_list, units=units, xp=xp)
 
     @classmethod
     def from_sequence(
         cls: type[PlainQuantity[opt.numpy.Array1D[np.float64]]],
+        /,
         seq: Sequence[
             PlainQuantity[np.floating]
             | PlainQuantity[np.integer]
@@ -411,8 +419,10 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             | PlainQuantity[int]
         ],
         units: UnitLike | None = None,
+        *,
+        xp: ArrayAPIModule | None = None,
     ) -> PlainQuantity[opt.numpy.Array1D[np.float64]]:
-        """Transforms a sequence of Quantities into an numpy.array quantity.
+        """Transforms a sequence of Quantities into an array quantity.
         If no units are specified, the unit of the first element will be used.
 
         If units is not specified and sequence is empty, the unit cannot be determined
@@ -424,6 +434,9 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             sequence of pint.PlainQuantity
         units : UnitsContainer, str or pint.PlainQuantity
             units of the physical quantity to be created (Default value = None)
+        xp : types.ModuleType or None
+            the Array API namespace used to construct the array
+            (if None, the default value, this function will use numpy if possible, or will raise an error)
 
         Returns
         -------
@@ -437,11 +450,21 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             else:
                 raise ValueError("Cannot determine units from empty sequence!")
 
-        a = np.empty(len_seq)
+        if xp is None:
+            xp = np  # pyright: ignore[reportAssignmentType]
+        if xp is None:
+            raise ValueError(
+                f"When `numpy` is not installed, `{cls.__name__}.from_sequence(...)` needs to know"
+                " which Array API namespace it should use for constructing arrays."
+                " Please set the `from_sequence(..., xp=...)` keyword parameter to your preferred namespace,"
+                " or alternatively install numpy."
+            )
+
+        a = xp.empty(len_seq)
 
         for i, seq_i in enumerate(seq):
+            # NOTE: the following will raise DimensionalityError if incompatible units are used in the sequence
             a[i] = seq_i.m_as(units)
-            # raises DimensionalityError if incompatible units are used in the sequence
 
         return cls(a, units)
 
