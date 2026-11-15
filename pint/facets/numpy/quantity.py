@@ -134,7 +134,7 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
 
     def clip(self, min=None, max=None, out=None, **kwargs):
         if min is not None:
-            if isinstance(min, self.__class__):
+            if isinstance(min, PlainQuantity):
                 min = min.to(self).magnitude
             elif self.dimensionless:
                 pass
@@ -142,7 +142,7 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
                 raise DimensionalityError("dimensionless", self._units)
 
         if max is not None:
-            if isinstance(max, self.__class__):
+            if isinstance(max, PlainQuantity):
                 max = max.to(self).magnitude
             elif self.dimensionless:
                 pass
@@ -155,7 +155,7 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
         return self.magnitude.fill(value.magnitude)
 
     def put(self: NumpyQuantity, indices, values, mode="raise") -> None:
-        if isinstance(values, self.__class__):
+        if isinstance(values, PlainQuantity):
             values = values.to(self).magnitude
         elif self.dimensionless:
             values = self.__class__(values, "").to(self)
@@ -193,7 +193,7 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
         self._magnitude.shape = value
 
     def searchsorted(self, v, side="left", sorter=None):
-        if isinstance(v, self.__class__):
+        if isinstance(v, PlainQuantity):
             v = v.to(self).magnitude
         elif self.dimensionless:
             v = self.__class__(v, "").to(self)
