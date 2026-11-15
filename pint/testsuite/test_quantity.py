@@ -2253,7 +2253,7 @@ class TestTimedelta(QuantityTestCase):
         # Q_(quantity, units) used to crash: the timedelta duck-array check
         # (now in GenericNumpyRegistry._as_magnitude_and_units)
         # misidentified the Quantity itself as a duck array (is_duck_array_type
-        # sees __array_function__/ndim/dtype on the class but can't see that
+        # used to see __array_function__/ndim/dtype on the class but couldn't see that
         # _magnitude/_units are only set per-instance), then failed accessing
         # `.dtype` on a magnitude that doesn't have one.
         length = self.Q_(30, "cm")
