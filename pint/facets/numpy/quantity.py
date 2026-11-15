@@ -15,13 +15,13 @@ import warnings
 from collections.abc import Iterator, Sequence
 from typing import TYPE_CHECKING, Any
 
-from ..._array_typing import HasShape, Shape
-from ..._typing import Magnitude
+from ..._array_api_typing import HasShape
+from ..._typing import Magnitude, Shape
 from ...compat import (
     HAS_NUMPY,
-    array_namespace,
+    array_api_namespace,
     array_size,
-    is_array_or_duck,
+    is_array_api_or_duck,
     np,
 )
 from ...errors import (
@@ -463,12 +463,12 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
         """
         qm = self._magnitude
 
-        if not is_array_or_duck(qm):
+        if not is_array_api_or_duck(qm):
             # Not an array: maximumPrefix doesn't apply to a single value,
             #   so defer to the scalar implementation instead.
             return super().to_compact(unit)
 
-        xp = array_namespace(qm)
+        xp = array_api_namespace(qm)
 
         if (
             self.unitless
