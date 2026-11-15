@@ -407,7 +407,6 @@ class TestNumPyFuncUtils(TestNumpyMethods):
             np.linalg.vecdot(a, b), self.Q_(32.0, "m * s")
         )
 
-    @helpers.requires_numpy_at_least("2.2")
     def test_matvec_vecmat(self):
         m = self.Q_(np.arange(6.0).reshape(2, 3), "m")
         v = self.Q_(np.array([1.0, 2.0, 3.0]), "s")
