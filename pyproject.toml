@@ -42,17 +42,20 @@ include = [
 
 [project.optional-dependencies]
 test = ["pytest>=9", "pytest-cov", "pytest-benchmark"]
+test-array = ["array-api-strict"]
 test-mpl = ["pytest-mpl"]
-test-all = ["pint[test, test-mpl]"]
+test-all = ["pint[test, test-array, test-mpl]"]
 codspeed = ["pytest>=9", "pint[test-mpl]", "pytest-codspeed"]
 numpy = ["numpy >= 2.0.0"]
+array-api-compat = ["array-api-compat"]
 optype = ["optype[numpy]"]
 uncertainties = ["uncertainties >= 3.1.6"]
 babel = ["babel"]
 pandas = ["pint-pandas >= 0.3"]
 xarray = ["xarray"]
-# Impose Dask < 2025.3.0, otherwise it causes "RuntimeError: Attempting to use an asynchronous Client in a synchronous context of `dask.compute`" (see Issue #1016 in Dask).
-dask = ["dask < 2025.3.0"]
+# Impose Dask < 2025.3.0, otherwise it causes "RuntimeError: Attempting to use an asynchronous Client in a synchronous context of `dask.compute`"
+#   (see https://github.com/dask/dask-ml/issues/1016).
+dask = ["dask < 2025.3.0", "array-api-compat"]
 scipy = ["scipy"]
 matplotlib = ["matplotlib"]
 all = [
@@ -82,6 +85,7 @@ docs = [
   "currencyconverter",
   "matplotlib",
   "numpy<2.5",
+  "array-api-compat",
   "xarray",
   "dask[complete]<2025.3.0",
   "optype[numpy]",
@@ -136,10 +140,12 @@ dev = { features = ["numpy", "dev", "py313"], solve-group = "default" }
 lint = { features = ["lint"], no-default-feature = true }
 build = { features = ["build"], no-default-feature = true }
 test = { features = ["test"], solve-group = "default" }
+test-array = { features = ["test-array"], solve-group = "default" }
 test-all = { features = ["test-all"], solve-group = "default" }
 typecheck = { features = [
   "typecheck",
   "optype",
+  "array-api-compat",
   "test-all",
 ], solve-group = "default" }
 numpy = { features = ["numpy"], solve-group = "default" }
@@ -172,12 +178,12 @@ all = { features = [
 test-py312 = ["test", "py312"]
 test-py313 = ["test", "py313"]
 test-py314 = ["test", "py314"]
-test-py312-numpy = ["numpy", "test", "py312"]
-test-py313-numpy = ["numpy", "test", "py313"]
-test-py314-numpy = ["numpy", "test", "py314"]
-test-py312-all = ["all", "test", "py312"]
-test-py313-all = ["all", "test", "py313"]
-test-py314-all = ["all", "test", "py314"]
+test-py312-numpy = ["numpy", "test", "test-array", "py312"]
+test-py313-numpy = ["numpy", "test", "test-array", "py313"]
+test-py314-numpy = ["numpy", "test", "test-array", "py314"]
+test-py312-all = ["all", "test", "test-array", "py312"]
+test-py313-all = ["all", "test", "test-array", "py313"]
+test-py314-all = ["all", "test", "test-array", "py314"]
 
 [tool.pixi.feature.dev.dependencies]
 tomlkit = "*"
