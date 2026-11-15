@@ -37,6 +37,10 @@ jobs:
         numpy: [null, "numpy>=2.2.0,<2.3.0", "numpy>=2.4.0"]
         uncertainties: [null, "uncertainties==3.1.6", "uncertainties>=3.1.6,<4.0.0"]
         extras: [null]
+        exclude:
+          # numpy 2.2.x has no wheels for Python 3.14
+          - environment: test-py314
+            numpy: "numpy>=2.2.0,<2.3.0"
         include:
           - environment: "test-py313" # Minimal versions
             numpy: "numpy>=2.2.0,<2.3.0"
