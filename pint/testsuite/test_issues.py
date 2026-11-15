@@ -1951,3 +1951,29 @@ def test_issue1887_ndarray_to_latex_template_and_spec():
     expected = r"\begin{pmatrix}1.00 & 2.50\end{pmatrix}"
     assert ndarray_to_latex(arr, ".2f") == expected
     assert ndarray_to_latex(arr, "{:.2f}") == expected
+
+
+def test_issue2535(func_registry):
+    # A dimensionality is not a valid set of units: reject it at creation.
+    ureg = func_registry
+    d = (1 * ureg.m).dimensionality
+    with pytest.raises(UndefinedUnitError):
+        ureg.Unit(d)
+    with pytest.raises(UndefinedUnitError):
+        ureg.Quantity(2, d)
+    with pytest.raises(TypeError):
+        d in ureg
+
+
+@pytest.mark.parametrize(
+    ("expr", "expected"),
+    [
+        ("kg.m", "kg*m"),
+        ("J/(kg.K)", "J/(kg*K)"),
+        ("J/(kg.°C)", "J/(kg*delta_degC)"),
+        ("J/kg.K", "J/kg*K"),
+    ],
+)
+def test_issue2543_dot_multiplication(expr, expected):
+    ureg = UnitRegistry()
+    assert ureg.parse_units(expr) == ureg.parse_units(expected)

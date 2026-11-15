@@ -30,11 +30,13 @@ from typing import (
     NoReturn,
     TypeAlias,  # noqa
     TypeGuard,
+    TypeIs,  # noqa
     Unpack,  # noqa
     overload,
 )
+from warnings import deprecated  # noqa
 
-from typing_extensions import TypeIs, deprecated  # noqa
+from ._array_api_typing import Array, ArrayAPIModule
 
 from ._array_typing import ArrayAPIModule
 from ._typing import Array
@@ -124,9 +126,9 @@ def is_upcast_type(cls: type) -> bool:
 try:
     import array_api_compat as xpc
 
-    _is_array_api_obj = xpc.is_array_api_obj  # pyright: ignore[reportAssignmentType]
-    _array_namespace = xpc.array_namespace  # pyright: ignore[reportAssignmentType]
-    _array_size = xpc.size
+    has_array_api = xpc.is_array_api_obj  # pyright: ignore[reportAssignmentType]
+    array_api_namespace = xpc.array_namespace  # pyright: ignore[reportAssignmentType]
+    array_api_size = xpc.size
 
     # Bonus: cheap isinstance functions for array libraries
     is_dask_array = xpc.is_dask_array
@@ -134,20 +136,21 @@ try:
 except ModuleNotFoundError:
     xpc = None
 
-    def _is_array_api_obj(x: object, /) -> TypeGuard[Array]:
+    def has_array_api(x: object, /) -> TypeGuard[Array]:
+        """Check if an object supports the Array API."""
         return hasattr(x, "__array_namespace__")
-
-    def _array_namespace(x: Array, /) -> ArrayAPIModule:
+  
+    def array_api_namespace(x: Array, /) -> ArrayAPIModule:
         return x.__array_namespace__()  # pyright: ignore[reportReturnType]
 
-    def _array_size(x: Array, /) -> int | None:
+    def array_api_size(x: Array, /) -> int | None:
         return x.size
 
     def is_dask_array(x: object, /) -> TypeIs["dask_array.Array"]:  # pyright: ignore[reportPrivateImportUsage]
         return HAS_DASK and isinstance(x, dask_array.Array)  # pyright: ignore[reportPrivateImportUsage]
 
 
-def is_duck_array(obj: object, /) -> TypeIs[Array]:
+def is_duck_array(obj: object, /) -> TypeGuard[Array]:
     """Check if an object represents a (non-Quantity) duck array."""
     return (
         # make sure it's not quantity-like
@@ -163,43 +166,38 @@ def is_duck_array(obj: object, /) -> TypeIs[Array]:
             or (hasattr(obj, "__array_priority__") and hasattr(obj, "shape"))
         )
     )
-
-
-def is_ndarray_or_duck(obj: object, /) -> TypeIs[Array]:
-    """Check if an object represents a (non-Quantity) duck array."""
+  
+  
+def is_ndarray_or_duck(obj: object, /) -> TypeGuard[Array]:
+    """Check if an object represents either a NumPy array (np.ndarray) or a (non-Quantity) duck array."""
     return (HAS_NUMPY and isinstance(obj, ndarray)) or is_duck_array(obj)
 
+  
+def is_array_api_or_duck(obj: object, /) -> TypeGuard[Array]:
+    """Check if an object represents either an Array API array or a (non-Quantity) duck array."""
+    return has_array_api(obj) or is_duck_array(obj)
 
-def is_array_or_duck(obj: object, /) -> TypeIs[Array]:
-    """Check if an object represents a (non-Quantity) array, or duck array."""
-    return (_is_array_api_obj(obj) or is_duck_array(obj)) and not (
-        HAS_NUMPY and isinstance(obj, np.generic)
-    )
+  
+def array_namespace_or_np(obj: Array, /) -> ArrayAPIModule:
+    """Find the array namespace for the given array (via the Array API) or duck array (default: `numpy`)."""
+    if has_array_api(obj):
+        return array_api_namespace(obj)
+    return numpy  # pyright: ignore[reportReturnType]
 
-
-def array_namespace(array: Array, /) -> ArrayAPIModule:
-    """Find the array namespace for the given array or duck array (default: `numpy`)."""
-    if _is_array_api_obj(array):
-        return _array_namespace(array)
-    # backwards-compatible duck array support
-    elif HAS_NUMPY:
-        return numpy  # pyright: ignore[reportReturnType]
-    else:
-        raise TypeError("Pint only fully supports duck arrays if NumPy is available.")
-
-
+  
 def array_size(array: Array, /) -> int | None:
-    if _is_array_api_obj(array):
-        return _array_size(array)
+    """Return the size (i.e. number of elements) of the given array (via the Array API) or duck array."""
+    if has_array_api(array):
+        return array_api_size(array)
     else:  # this can happen if `array` is a duck-array
         return array.size
 
 
 @overload
-def eq(lhs: Any, rhs: Any, check_all: Literal[True]) -> "bool | np.bool": ...
+def eq(lhs: Any, rhs: Any, /, check_all: Literal[True]) -> bool: ...
 @overload
-def eq(lhs: Any, rhs: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]": ...
-def eq(lhs: Any, rhs: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]":
+def eq(lhs: Any, rhs: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]": ...
+def eq(lhs: Any, rhs: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
     """Comparison of scalars and arrays.
 
     Parameters
@@ -217,13 +215,16 @@ def eq(lhs: Any, rhs: Any, check_all: bool) -> "bool | np.bool | Iterable[bool]"
     bool or array_like of bool
     """
     out = lhs == rhs
-    if check_all and is_array_or_duck(out):
-        return array_namespace(out).all(out).item()
+    if check_all:
+        if has_array_api(out):
+            return bool(array_api_namespace(out).all(out))
+        elif is_duck_array(out):
+            return bool(out.all())
     return out
 
 
 @overload
-def isnan(obj: Any, /, check_all: Literal[True]) -> "bool | np.bool": ...
+def isnan(obj: Any, /, check_all: Literal[True]) -> bool: ...
 @overload
 def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]": ...
 def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
@@ -243,8 +244,8 @@ def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
         Always return False for non-numeric types.
     """
     # arrays
-    if is_array_or_duck(obj):
-        xp = array_namespace(obj)
+    if is_array_api_or_duck(obj):
+        xp = array_namespace_or_np(obj)
         if xp.isdtype(obj.dtype, "numeric"):
             out = xp.isnan(obj)
         elif getattr(obj.dtype, "kind", "?") in "Mm":  # numpy datetime or timedelta
@@ -259,8 +260,7 @@ def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
             else:
                 # Not a numeric or datetime type
                 out = xp.full(obj.shape, False)
-        return xp.any(out).item() if check_all else out
-    # scalars
+        return bool(xp.any(out)) if check_all else out
     if isinstance(obj, np_datetime64):
         return np.isnat(obj)
     elif HAS_UNCERTAINTIES and isinstance(obj, UFloat):
@@ -272,7 +272,7 @@ def isnan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
 
 
 @overload
-def zero_or_nan(obj: Any, /, check_all: Literal[True]) -> "bool | np.bool": ...
+def zero_or_nan(obj: Any, /, check_all: Literal[True]) -> bool: ...
 @overload
 def zero_or_nan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]": ...
 def zero_or_nan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool]":
@@ -291,9 +291,12 @@ def zero_or_nan(obj: Any, /, check_all: bool) -> "bool | np.bool | Iterable[bool
     bool or array_like of bool.
         Always return False for non-numeric types.
     """
-    out = (obj == 0) | isnan(obj, check_all=False)
-    if check_all and is_array_or_duck(out):
-        return array_namespace(out).all(out).item()
+    out = (obj == 0) | isnan(obj, False)
+    if check_all:
+        if has_array_api(out):
+            return bool(array_api_namespace(out).all(out))
+        elif is_duck_array(out):
+            return bool(out.all())
     return out
 
 
@@ -418,7 +421,7 @@ if HAS_DASK:
     from dask.base import compute, persist, visualize
 
     if TYPE_CHECKING:
-        from dask import array as dask_array
+        import dask.array as dask_array
     else:
 
         class _LazyDaskArray:

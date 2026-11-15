@@ -32,7 +32,7 @@ from ...compat import (
     array_namespace,
     array_size,
     eq,
-    is_array_or_duck,
+    is_ndarray_or_duck,
     is_upcast_type,
     zero_or_nan,
 )
@@ -423,7 +423,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             self._magnitude,
             self._units,
             other,
-            inplace=is_array_or_duck(self._magnitude),
+            inplace=is_ndarray_or_duck(self._magnitude),
             **ctx_kwargs,
         )
 
@@ -831,7 +831,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     def __iadd__(self, other):
         if isinstance(other, datetime.datetime):
             return cast("PlainQuantity[int | float]", self).to_timedelta() + other
-        elif is_array_or_duck(self._magnitude):
+        elif is_ndarray_or_duck(self._magnitude):
             return self._iadd_sub(other, operator.iadd)
         return self._add_sub(other, operator.add)
 
@@ -872,7 +872,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     def __isub__[T: Magnitude, U: Magnitude](
         self: PlainQuantity[opt.CanISub[T, U]], other: PlainQuantity[T] | T
     ) -> PlainQuantity[U]:
-        if is_array_or_duck(self._magnitude):
+        if is_ndarray_or_duck(self._magnitude):
             return self._iadd_sub(other, operator.isub)
 
         return self._add_sub(other, operator.sub)
@@ -1101,7 +1101,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     def __imul__[T: Magnitude, U: Magnitude](
         self: PlainQuantity[opt.CanIMul[T, U]], other: PlainQuantity[T] | T
     ) -> PlainQuantity[U]:
-        if is_array_or_duck(self._magnitude):
+        if is_ndarray_or_duck(self._magnitude):
             return self._imul_div(other, operator.imul)
 
         return self._mul_div(other, operator.mul)
@@ -1164,7 +1164,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     def __itruediv__[T: Magnitude, U: Magnitude](
         self: PlainQuantity[opt.CanITruediv[T, U]], other: PlainQuantity[T] | T
     ) -> PlainQuantity[U]:
-        if is_array_or_duck(self._magnitude):
+        if is_ndarray_or_duck(self._magnitude):
             return self._imul_div(other, operator.itruediv)
 
         return self._mul_div(other, operator.truediv)
@@ -1372,7 +1372,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     def __ipow__[T: Magnitude, U: Magnitude](
         self: PlainQuantity[opt.CanIPow[T, U]], other: PlainQuantity[T] | T
     ) -> PlainQuantity[U]:
-        if not is_array_or_duck(self._magnitude):
+        if not is_ndarray_or_duck(self._magnitude):
             return self.__pow__(other)
 
         # Normalize the exponent and ensure it is dimensionless
@@ -1386,7 +1386,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         if not self._ok_for_muldiv:
             raise OffsetUnitCalculusError(self._units)
         # Handle array exponents
-        if is_array_or_duck(other):
+        if is_ndarray_or_duck(other):
             # arrays are refused as exponent, because they would create
             # len(array) quantities of len(set(array)) different units
             # unless the plain is dimensionless. Ensure dimensionless
@@ -1466,7 +1466,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         if not self._ok_for_muldiv:
             raise OffsetUnitCalculusError(self._units)
         # Handle array exponents
-        if is_array_or_duck(other):
+        if is_ndarray_or_duck(other):
             # Note: this will strip Units of degrees or radians from PlainQuantity
             if self.dimensionless:
                 return self.__class__(
@@ -1565,7 +1565,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
         def bool_result(value):
             nonlocal other
 
-            if not is_array_or_duck(self._magnitude):
+            if not is_ndarray_or_duck(self._magnitude):
                 return value
 
             if isinstance(other, PlainQuantity):
@@ -1605,7 +1605,14 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
             return bool_result(False)
 
         # TODO: this might be expensive. Do we even need it?
-        if eq(self._magnitude, 0, True) and eq(other._magnitude, 0, True):
+        # Zero is only zero in every unit of a dimension when the units are
+        # multiplicative: 0 degC and 0 degF are different temperatures.
+        if (
+            self._is_multiplicative
+            and other._is_multiplicative
+            and eq(self._magnitude, 0, True)
+            and eq(other._magnitude, 0, True)
+        ):
             return bool_result(self.dimensionality == other.dimensionality)
 
         if self._units == other._units:
@@ -1623,10 +1630,8 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     @check_implemented
     def __ne__(self, other):
         out = self.__eq__(other)
-        if is_array_or_duck(out):
-            # note: here we're using the namespace instead of `~` simply because duck arrays
-            #   are not guaranteed to implement `__invert__` with the same (Array API) semantics
-            return array_namespace(out).logical_not(out)
+        if is_ndarray_or_duck(out):
+            return np.logical_not(out)
         return not out
 
     @check_implemented

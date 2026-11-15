@@ -402,6 +402,7 @@ class TestGraph:
 
 
 class TestMatrix:
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     def test_matrix_to_string(self):
         assert (
             matrix_to_string([[1, 2], [3, 4]], row_headers=None, col_headers=None)
@@ -441,6 +442,10 @@ class TestMatrix:
             "c\t1\t2\n"
             "d\t3\t4"
         )
+
+    def test_matrix_to_string_deprecated(self):
+        with pytest.warns(DeprecationWarning, match="matrix_to_string"):
+            matrix_to_string([[1, 2], [3, 4]])
 
     def test_transpose(self):
         assert transpose([[1, 2], [3, 4]]) == [[1, 3], [2, 4]]

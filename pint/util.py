@@ -27,18 +27,19 @@ from typing import (
     TYPE_CHECKING,
     Any,
     ClassVar,
+    Literal,
     Self,
     TypeAlias,
 )
 
 from . import pint_eval
 from ._typing import Scalar
-from .compat import NUMERIC_TYPES
+from .compat import NUMERIC_TYPES, deprecated
 from .errors import DefinitionSyntaxError
 from .pint_eval import build_eval_tree
 
 if TYPE_CHECKING:
-    from typing_extensions import TypeIs
+    from typing import TypeIs
 
     from ._typing import QuantityOrUnitLike
     from .facets.plain import GenericPlainRegistry
@@ -56,6 +57,10 @@ def _noop[T](x: T) -> T:
     return x
 
 
+@deprecated(
+    "matrix_to_string is deprecated and will be removed in a future release.",
+    category=DeprecationWarning,
+)
 def matrix_to_string(
     matrix: ItMatrix,
     row_headers: Iterable[str] | None = None,
@@ -584,7 +589,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         self._d, self._one, self._non_int_type = state
         self._hash = None
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: UnitsContainer | dict | str, /) -> bool:
         if isinstance(other, UnitsContainer):
             # UnitsContainer.__hash__(self) is not the same as hash(self); see
             # ParserHelper.__hash__ and __eq__.
@@ -605,10 +610,10 @@ class UnitsContainer(Mapping[str, Scalar]):
 
         return dict.__eq__(self._d, other)
 
-    def __str__(self) -> str:
+    def __str__(self, /) -> str:
         return self.__format__("")
 
-    def __repr__(self) -> str:
+    def __repr__(self, /) -> str:
         return f"UnitsContainer({repr(self._d)})"
 
     def __format__(self, spec: str) -> str:
@@ -623,7 +628,7 @@ class UnitsContainer(Mapping[str, Scalar]):
 
         return format_unit(self, spec, registry=registry, **kwspec)
 
-    def __copy__(self):
+    def __copy__(self, /) -> Self:
         # Skip expensive health checks performed by __init__
         out = object.__new__(self.__class__)
         out._d = self._d.copy()
@@ -632,7 +637,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         out._one = self._one
         return out
 
-    def __mul__(self, other: Any):
+    def __mul__(self, other: Self, /) -> Self:
         if not isinstance(other, self.__class__):
             err = "Cannot multiply UnitsContainer by {}"
             raise TypeError(err.format(type(other)))
@@ -659,7 +664,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         new._hash = None
         return new
 
-    def __truediv__(self, other: Any):
+    def __truediv__(self, other: Self, /) -> Self:
         if not isinstance(other, self.__class__):
             err = "Cannot divide UnitsContainer by {}"
             raise TypeError(err.format(type(other)))
@@ -673,7 +678,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         new._hash = None
         return new
 
-    def __rtruediv__(self, other: Any):
+    def __rtruediv__(self, other: Self | Literal[1], /) -> Self:
         if not isinstance(other, self.__class__) and other != 1:
             err = "Cannot divide {} by UnitsContainer"
             raise TypeError(err.format(type(other)))
@@ -1070,18 +1075,17 @@ def to_units_container(
     -------
     UnitsContainer
     """
-    mro = type(unit_like).mro()
-    if UnitsContainer in mro:
+    if isinstance(unit_like, UnitsContainer):
         return unit_like
-    elif SharedRegistryObject in mro:
+    elif isinstance(unit_like, SharedRegistryObject):
         return unit_like._units
-    elif str in mro:
+    elif isinstance(unit_like, str):
         if registry:
             unit_like = registry._apply_preprocessors(unit_like)
             return registry.parse_units_as_container(unit_like)
         else:
             return ParserHelper.from_string(unit_like)
-    elif dict in mro:
+    elif isinstance(unit_like, dict):
         if registry:
             return registry.UnitsContainer(unit_like)
         else:

@@ -25,11 +25,10 @@ from typing import (
     Literal,
     Self,
     TypeAlias,
+    TypeVar,
     overload,
     override,
 )
-
-from typing_extensions import TypeVar
 
 from . import facets, registry_helpers
 from .util import logger, pi_theorem
@@ -202,6 +201,8 @@ class Quantity(
             other: Quantity[opt.CanRAdd[MagnitudeT_co, U]]
             | opt.CanRAdd[MagnitudeT_co, U],
         ) -> Quantity[U]: ...
+
+        __radd__ = __add__
 
         def __isub__[T: Magnitude, U: Magnitude](
             self: Quantity[opt.CanISub[T, U]], other: Quantity[T] | T
