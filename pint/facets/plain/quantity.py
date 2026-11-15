@@ -189,7 +189,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
 
     @overload
     def __new__(
-        cls, value: datetime.timedelta | np.timedelta64, units: UnitLike | None = None
+        cls, value: datetime.timedelta, units: UnitLike | None = None
     ) -> "PlainQuantity[float]": ...
     @overload
     def __new__(
@@ -938,7 +938,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     # PlainQuantity[float | array[float]] + timedelta -> PlainQuantity[float | array[float]]
     @overload
     def __add__[T: int | float | npt.ArrayND[np.floating]](
-        self: PlainQuantity[T], other: datetime.timedelta | np.timedelta64
+        self: PlainQuantity[T], other: datetime.timedelta
     ) -> PlainQuantity[T]: ...
     # General overloads (should work in most cases)
     @overload
@@ -975,7 +975,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     # PlainQuantity[float | array[float]] - timedelta -> PlainQuantity[float | array[float]]
     @overload
     def __sub__[T: int | float | npt.ArrayND[np.floating]](
-        self: PlainQuantity[T], other: datetime.timedelta | np.timedelta64
+        self: PlainQuantity[T], other: datetime.timedelta
     ) -> PlainQuantity[T]: ...
     # General overloads (should work in most cases)
     @overload
@@ -1000,7 +1000,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     # timedelta - PlainQuantity[float | array[float]] -> PlainQuantity[float | array[float]]
     @overload
     def __rsub__[T: int | float | npt.ArrayND[np.floating]](
-        self: PlainQuantity[T], other: datetime.timedelta | np.timedelta64
+        self: PlainQuantity[T], other: datetime.timedelta
     ) -> PlainQuantity[T]: ...
     # General overloads (should work in most cases)
     @overload
@@ -1204,7 +1204,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     # Quantity[float | array[float]] * timedelta -> Quantity[float | array[float]]
     @overload
     def __mul__[T: int | float | npt.ArrayND[np.floating]](
-        self: PlainQuantity[T], other: datetime.timedelta | np.timedelta64
+        self: PlainQuantity[T], other: datetime.timedelta
     ) -> PlainQuantity[T]: ...
     # General overloads (should work in most cases)
     @overload
@@ -1267,7 +1267,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     # PlainQuantity[float | array[float]] / timedelta -> PlainQuantity[float | array[float]]
     @overload
     def __truediv__[T: int | float | npt.ArrayND[np.floating]](
-        self: PlainQuantity[T], other: datetime.timedelta | np.timedelta64
+        self: PlainQuantity[T], other: datetime.timedelta
     ) -> PlainQuantity[T]: ...
     # General overloads
     @overload
@@ -1286,7 +1286,7 @@ class PlainQuantity(PrettyIPython, SharedRegistryObject, Generic[MagnitudeT_co])
     # timedelta / PlainQuantity[float | array[float]] -> PlainQuantity[float | array[float]]
     @overload
     def __rtruediv__[T: int | float | npt.ArrayND[np.floating]](
-        self: PlainQuantity[T], other: datetime.timedelta | np.timedelta64
+        self: PlainQuantity[T], other: datetime.timedelta
     ) -> PlainQuantity[T]: ...
     # General overloads
     @overload
