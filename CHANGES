@@ -6,7 +6,9 @@ Pint Changelog
 
 ### Version changes
 
+- Drop support for Python 3.12, following SPEC 0 (#2571)
 - Bump minimum numpy version to 2.2.0, following SPEC 0 (#2571)
+- Remove the `typing_extensions` dependency (#2571)
 
 ### Other changes
 
