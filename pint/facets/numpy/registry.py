@@ -8,6 +8,8 @@ pint.facets.numpy.registry
 
 from __future__ import annotations
 
+import pathlib
+from collections.abc import Iterable
 from types import NotImplementedType
 from typing import TYPE_CHECKING, Literal, overload, override
 
@@ -47,6 +49,21 @@ _DTYPE_TO_UNIT = {
 class GenericNumpyRegistry[QuantityT: Quantity, UnitT: Unit](
     GenericPlainRegistry[QuantityT, UnitT]
 ):
+    force_ndarray: bool
+    force_ndarray_like: bool
+
+    def __init__(
+        self,
+        filename: Iterable[str] | str | pathlib.Path | None = "",
+        *,
+        force_ndarray: bool = False,
+        force_ndarray_like: bool = False,
+        **kwargs,
+    ):
+        super().__init__(filename=filename, **kwargs)
+        self.force_ndarray = force_ndarray
+        self.force_ndarray_like = force_ndarray_like
+
     @overload
     def _into_ndarray_like(
         self, value: Magnitude, /, *, force_ndarray: Literal[True]
@@ -71,9 +88,8 @@ class GenericNumpyRegistry[QuantityT: Quantity, UnitT: Unit](
 
     @override
     def _normalize_magnitude(self, value: object, /) -> Magnitude | NotImplementedType:
-        # note: `np.ndarray`s are also duck arrays, while
-        #       `np.number` inherits from `numbers.Number`
-        #     => no need to check for those, they get already accepted by `PlainQuantity`
+        # NOTE: `np.ndarray` supports the Array API, while `np.number` inherits from `numbers.Number`
+        #   => no need to check for those, they get already accepted by `PlainQuantity`
         if (self.force_ndarray or self.force_ndarray_like) and not HAS_NUMPY:
             raise ValueError(
                 "Cannot force to ndarray or ndarray-like when NumPy is not present."

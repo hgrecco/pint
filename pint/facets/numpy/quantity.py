@@ -64,6 +64,14 @@ def method_wraps(numpy_func):
 class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
     """ """
 
+    @property
+    def force_ndarray(self) -> bool:
+        return self._REGISTRY.force_ndarray
+
+    @property
+    def force_ndarray_like(self) -> bool:
+        return self._REGISTRY.force_ndarray_like
+
     # NumPy function/ufunc support
     __array_priority__ = 17
 

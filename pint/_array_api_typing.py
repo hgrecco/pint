@@ -51,6 +51,14 @@ class ArrayAPIModule(Protocol):
         dtype: type | None = None,
         device: Device | None = None,
     ) -> Array: ...
+    def empty(
+        self,
+        /,
+        shape: int | Shape,
+        *,
+        dtype: type | None = None,
+        device: Device | None = None,
+    ) -> Array: ...
 
     # Shape operations
     def broadcast_arrays(self, /, *arrays: Array) -> tuple[Array, ...]: ...
