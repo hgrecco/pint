@@ -25,11 +25,10 @@ from typing import (
     Literal,
     Self,
     TypeAlias,
+    TypeVar,
     overload,
     override,
 )
-
-from typing_extensions import TypeVar
 
 from . import facets, registry_helpers
 from .util import logger, pi_theorem

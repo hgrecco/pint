@@ -1,8 +1,16 @@
 Pint Changelog
 ==============
 
-0.26.3 (unreleased)
+0.27.0 (unreleased)
 -------------------
+
+### Version changes
+
+- Drop support for Python 3.12, following SPEC 0 (#2571)
+- Bump minimum numpy version to 2.2.0, following SPEC 0 (#2571)
+- Remove the `typing_extensions` dependency (#2571)
+
+### Other changes
 
 - Add `array-api-compat` as an optional dependency (#2554)
 - Fix `Quantity(0, "degC") == Quantity(0, "degF")` and similar comparisons of zero in different offset units returning `True` (#2555)

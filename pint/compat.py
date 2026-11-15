@@ -25,11 +25,11 @@ from typing import (
     NoReturn,
     TypeAlias,  # noqa
     TypeGuard,
+    TypeIs,  # noqa
     Unpack,  # noqa
     overload,
 )
-
-from typing_extensions import TypeIs, deprecated  # noqa
+from warnings import deprecated  # noqa
 
 from ._array_api_typing import Array, ArrayAPIModule
 
