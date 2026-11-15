@@ -63,7 +63,7 @@ from ..._typing import (
     Scalar,
     UnitLike,
 )
-from ...compat import coerce_scalar, is_array_api_or_duck, is_ndarray_or_duck
+from ...compat import coerce_scalar, is_array_api_or_duck
 from ...errors import (
     DimensionalityError,
     OffsetUnitCalculusError,
