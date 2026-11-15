@@ -7,6 +7,7 @@ Adds pint the capability to interoperate with Dask
 :copyright: 2022 by Pint Authors, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
+# pyright: reportPrivateImportUsage=none
 
 from __future__ import annotations
 

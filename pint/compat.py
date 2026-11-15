@@ -4,6 +4,11 @@ pint.compat
 
 Compatibility layer.
 
+Array detection/support functions try the APIs in the following order:
+- Array API standard (experimental)
+- Duck arrays (e.g. dask/pandas; partial support)
+- NumPy ndarray (full support)
+
 :copyright: 2013 by Pint Authors, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
@@ -145,11 +150,18 @@ except ModuleNotFoundError:
 def is_duck_array(obj: object, /) -> TypeGuard[Array]:
     """Check if an object represents a (non-Quantity) duck array."""
     return (
+        # make sure it's not quantity-like
         not hasattr(obj, "_magnitude")
         and not hasattr(obj, "_units")
-        and hasattr(obj, "__array_function__")
+        # important array attributes
         and hasattr(obj, "ndim")
         and hasattr(obj, "dtype")
+        and (
+            # duck arrays
+            hasattr(obj, "__array_function__")
+            # scipy sparse
+            or (hasattr(obj, "__array_priority__") and hasattr(obj, "shape"))
+        )
     )
 
 
