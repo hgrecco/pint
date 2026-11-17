@@ -124,9 +124,36 @@ class GenericContextRegistry[QuantityT: Quantity, UnitT: Unit](
 
         return context
 
+    def define(self, definition: str | type, rebuild_cache: bool = True) -> None:
+        with self._writing_to_plain_units():
+            super().define(definition, rebuild_cache)
+
+    def load_definitions(
+        self, file, is_resource: bool = False, rebuild_cache: bool = True
+    ):
+        with self._writing_to_plain_units():
+            return super().load_definitions(file, is_resource, rebuild_cache)
+
+    @contextmanager
+    def _writing_to_plain_units(self) -> Generator[None]:
+        """Write definitions to the plain units, not an active context overlay."""
+        if not self._initialized:
+            yield
+            return
+        del self._units.maps[:-1]
+        try:
+            yield
+        finally:
+            self._switch_context_cache_and_units()
+
     def _build_cache(self, loaded_files=None) -> None:
+        # Build the plain cache without context overlays, and drop the
+        # per-context variants since they derive from the old plain cache.
+        del self._units.maps[:-1]
         super()._build_cache(loaded_files)
-        self._caches[()] = self._cache
+        self._caches = {(): self._cache}
+        self._context_units = {}
+        self._switch_context_cache_and_units()
 
     def _switch_context_cache_and_units(self) -> None:
         """If any of the active contexts redefine units, create variant self._cache
@@ -145,6 +172,7 @@ class GenericContextRegistry[QuantityT: Quantity, UnitT: Unit](
         try:
             self._cache = self._caches[key]
             self._units.maps.insert(0, self._context_units[key])
+            return
         except KeyError:
             pass
 
@@ -157,6 +185,7 @@ class GenericContextRegistry[QuantityT: Quantity, UnitT: Unit](
         self._units.maps.insert(0, units_overlay)
 
         on_redefinition_backup = self._on_redefinition
+        cache_stale_backup = self._cache_stale
         self._on_redefinition = "ignore"
         try:
             for ctx in reversed(self._active_ctx.contexts):
@@ -164,6 +193,7 @@ class GenericContextRegistry[QuantityT: Quantity, UnitT: Unit](
                     self._redefine(definition)
         finally:
             self._on_redefinition = on_redefinition_backup
+            self._cache_stale = cache_stale_backup
 
     def _redefine(self, definition: UnitDefinition) -> None:
         """Redefine a unit from a context"""
@@ -204,7 +234,7 @@ class GenericContextRegistry[QuantityT: Quantity, UnitT: Unit](
         )
 
         # Write into the context-specific self._units.maps[0] and self._cache.root_units
-        self.define(definition)
+        self._helper_dispatch_adder(definition)
 
     def enable_contexts(
         self, *names_or_contexts: str | objects.Context, **kwargs: Any

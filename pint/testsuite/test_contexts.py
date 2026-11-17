@@ -1153,3 +1153,17 @@ def test_prefixed_unit_from_context_formats_after_exit():
         q = ureg.Quantity(1, "kilofoo")
     # This abbreviated format used to raise KeyError after the context exited.
     assert f"{q:~P}" == "1 kf"
+
+
+def test_redefining_context_cache_reused():
+    ureg = UnitRegistry()
+    ctx = Context("c")
+    ctx.redefine("inch = 2 cm")
+    ureg.add_context(ctx)
+    with ureg.context("c"):
+        first = ureg._cache
+        assert ureg.Quantity(1, "inch").to("cm").magnitude == pytest.approx(2)
+    with ureg.context("c"):
+        assert ureg._cache is first
+        assert ureg.Quantity(1, "inch").to("cm").magnitude == pytest.approx(2)
+    assert ureg.Quantity(1, "inch").to("cm").magnitude == pytest.approx(2.54)

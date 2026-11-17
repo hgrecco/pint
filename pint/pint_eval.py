@@ -33,11 +33,11 @@ else:
 
 def _power(left: Any, right: Any) -> Any:
     from . import Quantity
-    from .compat import is_duck_array
+    from .compat import is_ndarray_or_duck
 
     if (
         isinstance(left, Quantity)
-        and is_duck_array(left.magnitude)
+        and is_ndarray_or_duck(left.magnitude)
         and left.dtype.kind not in "cf"
         and right < 0
     ):
@@ -123,13 +123,17 @@ class IteratorLookAhead[S]:
 
 
 def plain_tokenizer(input_string: str) -> Generator[TokenInfo, None, None]:
-    """Standard python tokenizer, treating ``$`` as a name character like ``£``."""
+    """Standard python tokenizer, treating ``$`` as a name character like ``£``
+    and ``.`` between units as multiplication, e.g. ``kg.m``.
+    """
     pending: TokenInfo | None = None
     for tokinfo in tokenize.tokenize(BytesIO(input_string.encode("utf-8")).readline):
         if tokinfo.type == tokenlib.ENCODING:
             continue
         if tokinfo.type == tokenlib.OP and tokinfo.string == "$":
             tokinfo = tokinfo._replace(type=tokenlib.NAME)
+        elif tokinfo.type == tokenlib.OP and tokinfo.string == ".":
+            tokinfo = tokinfo._replace(string="*")
         if tokinfo.type == tokenlib.NAME:
             if (
                 pending is not None

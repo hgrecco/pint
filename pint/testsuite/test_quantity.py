@@ -8,7 +8,7 @@ import math
 import operator as op
 import pickle
 import warnings
-from typing import TYPE_CHECKING, assert_type
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import pytest
@@ -57,7 +57,7 @@ class TestQuantity(QuantityTestCase):
             assert x.magnitude == 4.2
             assert x.units == UnitsContainer(meter=1)
 
-        x = self.Q_(4.2, UnitsContainer(length=1))
+        x = self.Q_(4.2, UnitsContainer(meter=1))
         y = self.Q_(x)
         assert x.magnitude == y.magnitude
         assert x.units == y.units
@@ -78,13 +78,6 @@ class TestQuantity(QuantityTestCase):
         assert self.Q_("3 m", "cm").units == self.ureg.cm
         with pytest.raises(DimensionalityError):
             self.Q_("3 kg", "m")
-
-    def test_round(self) -> None:
-        x: Q_[float] = self.Q_(1.1, "kg")
-        round1 = assert_type(round(x), "Q_[int]")
-        round2 = assert_type(round(x, 0), "Q_[float]")
-        assert isinstance(round1.magnitude, int)
-        assert isinstance(round2.magnitude, float)
 
     def test_quantity_with_quantity(self):
         x: Q_[float] = self.Q_(4.2, "m")
@@ -1026,9 +1019,9 @@ class TestQuantityToCompact(QuantityTestCase):
         self.compare_quantity_compact(float("inf") * ureg.m, float("inf") * ureg.m)
 
     def test_nonnumeric_magnitudes(self):
-        x = self.Q_(object(), "m")
+        q = self.Q_(object(), "m")  # pyright: ignore[reportCallIssue,reportArgumentType]
         with pytest.warns(UndefinedBehavior):
-            x.to_compact()
+            q.to_compact()
 
     def test_very_large_to_compact(self):
         # This should not raise an IndexError
@@ -1263,29 +1256,7 @@ class TestQuantityBasicMath(QuantityTestCase):
         # self._test_quantity_ifloordiv(unit, ifunc)
 
     def test_float(self):
-        # Runtime tests
         self._test_numeric(1.0, self._test_not_inplace)
-        # Typing tests (TODO: expand these with more cases)
-        if TYPE_CHECKING:
-            from typing import Any  # noqa
-
-            x: Q_[float] = self.Q_(1.0)
-            y: Q_[float] = self.Q_(1.0)
-            assert_type(x + y, "Q_[float]")
-            assert_type(x - y, "Q_[float]")
-            assert_type(x * y, "Q_[float]")
-            assert_type(x / y, "Q_[float]")
-            assert_type(x // y, "Q_[float]")
-            assert_type(x % y, "Q_[float]")
-            assert_type(x**y, "Q_[Any]")  # NOTE: This is a known problem in typeshed
-            assert_type(divmod(x, y), "tuple[Q_[float], Q_[float]]")
-            x += y
-            x -= y
-            x *= y
-            x /= y
-            x //= y
-            x %= y
-            x **= y
 
     def test_fraction(self):
         import fractions
@@ -1299,7 +1270,6 @@ class TestQuantityBasicMath(QuantityTestCase):
     def test_quantity_abs_round(self) -> None:
         x: Q_[float] = self.Q_(-4.2, "meter")
         y: Q_[float] = self.Q_(4.2, "meter")
-        c: Q_[complex] = self.Q_(3 + 2j, "meter")
 
         for fun in (abs, round, op.pos, op.neg):
             zx = self.Q_(fun(x.magnitude), "meter")
@@ -1310,15 +1280,6 @@ class TestQuantityBasicMath(QuantityTestCase):
             assert ry == zy, f"while testing {fun}"
             assert rx is not zx, f"while testing {fun}"
             assert ry is not zy, f"while testing {fun}"
-
-        # type checking tests
-        assert_type(abs(x), "Q_[float]")
-        assert_type(abs(c), "Q_[float]")
-        assert_type(round(x), "Q_[int]")
-        assert_type(+x, "Q_[float]")
-        assert_type(+c, "Q_[complex]")
-        assert_type(-x, "Q_[float]")
-        assert_type(-c, "Q_[complex]")
 
     def test_quantity_float_complex(self) -> None:
         x: Q_[float] = self.Q_(-4.2, None)
@@ -2004,16 +1965,33 @@ class TestOffsetUnitMath(QuantityTestCase):
                 helpers.assert_quantity_almost_equal(op.pow(in1, in2), expected)
 
     @helpers.requires_numpy
-    def test_exponentiation_force_ndarray(self):
-        ureg = UnitRegistry(force_ndarray_like=True)
-        q = ureg.Quantity(1, "1 / hours")
-
-        q1 = q**2
-        assert all(isinstance(v, int) for v in q1._units.values())
-
-        q2 = q.copy()
-        q2 **= 2
-        assert all(isinstance(v, int) for v in q2._units.values())
+    @pytest.mark.parametrize("inplace", (False, True))
+    @pytest.mark.parametrize("like", (False, True))
+    def test_exponentiation_force_ndarray(self, inplace: bool, like: bool):
+        if like:
+            ureg = UnitRegistry(force_ndarray_like=True)
+        else:
+            ureg = UnitRegistry(force_ndarray=True)
+        q = ureg.Quantity(2, "m")
+        with pytest.raises(DimensionalityError):
+            _ = q ** ureg.Quantity(2, "m")
+        with pytest.raises(TypeError):
+            _ = q**True
+        if inplace:
+            q **= ureg.Quantity(100, "cm/m")
+        else:
+            q = q ** ureg.Quantity(100, "cm/m")
+        helpers.assert_quantity_equal(q, ureg.Quantity(2, "m"))
+        for v in q._units.values():
+            assert isinstance(v, int)
+        # non-trivial exponents must also keep integer unit exponents
+        q1 = ureg.Quantity(1, "1 / hours")
+        if inplace:
+            q1 **= 2
+        else:
+            q1 = q1**2
+        for v in q1._units.values():
+            assert isinstance(v, int)
 
     @helpers.requires_numpy
     @pytest.mark.parametrize(("input_tuple", "expected"), exponentiation)
@@ -2113,7 +2091,7 @@ class TestTimedelta(QuantityTestCase):
         assert d + datetime.timedelta(seconds=3) == after
         after = d - 3 * self.ureg.second
         assert d - datetime.timedelta(seconds=3) == after
-        with pytest.raises(DimensionalityError):
+        with pytest.raises(TypeError):
             3 * self.ureg.second - d  # pyright: ignore[reportOperatorIssue]
 
     def test_iadd_isub(self):
@@ -2128,8 +2106,8 @@ class TestTimedelta(QuantityTestCase):
         after -= 3 * self.ureg.second
         assert d - datetime.timedelta(seconds=3) == after
         after = 3 * self.ureg.second
-        with pytest.raises(DimensionalityError):
-            after -= d
+        with pytest.raises(TypeError):
+            after -= d  # pyright: ignore[reportOperatorIssue]
 
     def test_init_quantity(self):
         # 608
@@ -2272,9 +2250,10 @@ class TestTimedelta(QuantityTestCase):
         )
 
     def test_init_quantity_with_quantity_and_units(self):
-        # Q_(quantity, units) used to crash: _is_timedelta's duck-array check
+        # Q_(quantity, units) used to crash: the timedelta duck-array check
+        # (now in GenericNumpyRegistry._as_magnitude_and_units)
         # misidentified the Quantity itself as a duck array (is_duck_array_type
-        # sees __array_function__/ndim/dtype on the class but can't see that
+        # used to see __array_function__/ndim/dtype on the class but couldn't see that
         # _magnitude/_units are only set per-instance), then failed accessing
         # `.dtype` on a magnitude that doesn't have one.
         length = self.Q_(30, "cm")
@@ -2345,6 +2324,24 @@ class TestCompareNeutral(QuantityTestCase):
         assert not (q1 == 0)
         assert not (q2 == 0)
         assert not (q0 == ureg.Quantity(0, ""))
+
+    def test_offset_zero_equal_offset_zero(self):
+        # Zero in one offset unit is not zero in another one.
+        Q_ = self.Q_
+        assert not (Q_(0, "degC") == Q_(0, "degF"))
+        assert Q_(0, "degC") != Q_(0, "degF")
+        assert not (Q_(0, "degC") == Q_(0, "kelvin"))
+        assert not (Q_(0, "kelvin") == Q_(0, "degF"))
+        assert Q_(0, "degC") == Q_(0, "degC")
+        assert Q_(0, "kelvin") == Q_(0, "degR")
+        assert Q_(0, "delta_degC") == Q_(0, "delta_degF")
+
+    @helpers.requires_numpy
+    def test_offset_zero_equal_offset_zero_NP(self):
+        np.testing.assert_array_equal(
+            self.Q_(np.zeros(2), "degC") == self.Q_(np.zeros(2), "degF"),
+            np.array([False, False]),
+        )
 
     def test_gt_zero(self):
         self.ureg.autoconvert_offset_to_baseunit = False

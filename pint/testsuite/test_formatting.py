@@ -5,6 +5,8 @@ from fractions import Fraction
 import pytest
 
 import pint.formatting as fmt
+from pint.compat import np
+from pint.testsuite import helpers
 
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning:pint*")
@@ -139,3 +141,36 @@ def test_format_temperature_latex(func_registry, unit, latex, siunitx):
 def test_format_temperature_siunitx_compound(func_registry):
     u = func_registry.Unit("joule / delta_degC ** 2")
     assert format(u, "Lx") == r"\si[]{\joule\per\degreeCelsius\squared}"
+
+
+@helpers.requires_numpy
+@pytest.mark.parametrize(
+    "spec, shape, expected",
+    [
+        ("~T", (2,), 'mat(0, 1) "m"'),
+        ("~T", (2, 2), 'mat(0, 1 ;\n2, 3) "m"'),
+        (
+            "~T",
+            (2, 1, 1),
+            'arr[0,:,:] = mat(0)\narr[1,:,:] = mat(1) "m"',
+        ),
+        (
+            "~T",
+            (1, 2, 1, 1),
+            'arr[0,0,:,:] = mat(0)\narr[0,1,:,:] = mat(1) "m"',
+        ),
+        ("~Tz", (2,), "mat(#quan[0], #quan[1]) #quan[m]"),
+        ("~Tz", (2, 2), "mat(#quan[0], #quan[1] ;\n#quan[2], #quan[3]) #quan[m]"),
+    ],
+)
+def test_format_typst_array(func_registry, spec, shape, expected):
+    q = func_registry.Quantity(np.arange(np.prod(shape)).reshape(shape), "m")
+    assert format(q, spec) == expected
+
+
+@helpers.requires_numpy
+def test_format_typst_array_mspec(func_registry):
+    q = func_registry.Quantity(np.array([1.0, 2e20]), "m")
+    assert format(q, ".1f~T") == 'mat(1.0, 200000000000000000000.0) "m"'
+    assert format(q, "~T") == 'mat(1.0, 2 times 10^(20)) "m"'
+    assert format(q, "~Tz") == "mat(#quan[1.0], #quan[2e20]) #quan[m]"

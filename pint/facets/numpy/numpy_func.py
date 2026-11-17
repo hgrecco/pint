@@ -929,6 +929,7 @@ def _trapz(y, x=None, dx=1.0, **kwargs):
 
 @implements("correlate", "function")
 def _correlate(a, v, mode="valid", **kwargs):
+    a, v = _dimensionless_if_needed(a, v)
     a = _base_unit_if_needed(a)
     v = _base_unit_if_needed(v)
     units = a.units * v.units

@@ -216,7 +216,7 @@ class TestMeasurement(QuantityTestCase):
             func_registry.Quantity(0.1, "s ** 2"),
         )
         m = func_registry.Measurement(v, u)
-        func_registry.default_format = spec
+        func_registry.formatter.default_format = spec
         assert f"{m}" == expected
 
     def test_raise_build(self):

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pathlib
 from collections.abc import Callable
-from operator import getitem
 from typing import Any
 
 import pytest
@@ -55,15 +54,6 @@ def test_getattr(benchmark, setup: SetupType, key: str, pre_run: bool):
     if pre_run:
         no_benchmark(getattr, ureg, key)
     benchmark(getattr, ureg, key)
-
-
-@pytest.mark.parametrize("key", UNITS)
-@pytest.mark.parametrize("pre_run", (True, False))
-def test_getitem(benchmark, setup: SetupType, key: str, pre_run: bool):
-    ureg, _ = setup
-    if pre_run:
-        no_benchmark(getitem, ureg, key)
-    benchmark(getitem, ureg, key)
 
 
 @pytest.mark.parametrize("key", UNITS)

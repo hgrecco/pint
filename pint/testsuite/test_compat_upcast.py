@@ -50,6 +50,16 @@ def test_quantification(module_registry, ds):
     assert np.isclose(mean, 2.5 * module_registry.K)
 
 
+def test_dataarray_loc_nan(module_registry, q_base):
+    da = xr.DataArray(
+        q_base.copy(), dims=("x", "y"), coords={"x": ["a", "b"], "y": [0, 1]}
+    )
+    da.loc[{"x": "a"}] = np.nan
+    assert isinstance(da.data, module_registry.Quantity)
+    assert da.data.units == module_registry.m
+    np.testing.assert_equal(da.data.magnitude, [[np.nan, np.nan], [3.0, 4.0]])
+
+
 @pytest.mark.parametrize(
     "op",
     [

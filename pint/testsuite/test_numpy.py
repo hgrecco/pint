@@ -1037,7 +1037,6 @@ class TestNumpyUnclassified(TestNumpyMethods):
             np.clip(self.q, 150 * self.ureg.cm, None), [[1.5, 2], [3, 4]] * self.ureg.m
         )
 
-    @helpers.requires_numpy_at_least("2.1")
     def test_clip_numpy_func_array_api_names(self):
         # numpy 2.1 added `min`/`max` as array-API compatible spellings of
         # `a_min`/`a_max`; they must get the same unit handling.
@@ -1253,6 +1252,43 @@ class TestNumpyUnclassified(TestNumpyMethods):
             assert not w
             assert q.mask[0]
 
+    @pytest.mark.parametrize(
+        "key, value, as_array, expected",
+        [
+            ((0, slice(0, 1)), [float("nan")], True, [[float("nan"), 2], [3, 4]]),
+            (0, [float("nan")] * 2, True, [[float("nan")] * 2, [3, 4]]),
+            (slice(None), [float("nan")] * 2, True, [[float("nan")] * 2] * 2),
+            ((0, 0), float("nan"), False, [[float("nan"), 2], [3, 4]]),
+            ((0, 0), float("nan"), True, [[float("nan"), 2], [3, 4]]),
+        ],
+    )
+    def test_setitem_nan(self, key, value, as_array, expected):
+        q = self.Q_([[1.0, 2.0], [3.0, 4.0]], "m")
+        q[key] = np.array(value) if as_array else value
+        np.testing.assert_equal(q.magnitude, expected)
+        assert q.units == self.ureg.m
+
+    @pytest.mark.parametrize("value", [[1.0, 2.0], [float("nan"), 2.0], [], ["nan"]])
+    def test_setitem_nan_requires_all_nan(self, value):
+        q = self.Q_([1.0, 2.0], "m")
+        with pytest.raises(DimensionalityError):
+            q[:] = np.array(value)
+        np.testing.assert_equal(q.magnitude, [1.0, 2.0])
+
+    def test_setitem_nan_quantity(self):
+        q = self.Q_([1.0, 2.0], "m")
+        with pytest.raises(DimensionalityError):
+            q[:] = self.Q_([np.nan, np.nan], "s")
+        q[:] = self.Q_([np.nan, 200.0], "cm")
+        np.testing.assert_equal(q.magnitude, [np.nan, 2.0])
+        assert q.units == self.ureg.m
+
+    def test_setitem_nan_shape_mismatch(self):
+        q = self.Q_([1.0, 2.0], "m")
+        with pytest.raises(ValueError):
+            q[:] = np.full(3, np.nan)
+        np.testing.assert_equal(q.magnitude, [1.0, 2.0])
+
     def test_setitem_offset_units(self):
         # issue #618
         q = self.Q_(np.zeros(4), "kelvin")
@@ -1285,6 +1321,28 @@ class TestNumpyUnclassified(TestNumpyMethods):
         masked_q = self.Q_(masked, "mm")
         q[:] = masked_q
         helpers.assert_quantity_equal(q, [1.0, 0.002] * self.ureg.m)
+
+    def test_setitem_subclass(self):
+        # issue #826: the value's class may differ from the array's class
+        # (subclass vs base class); assignment must behave the same either way.
+        class QClone(self.Q_):
+            pass
+
+        q = QClone([1.0, 2.0], "m")
+        q[0] = self.Q_(0.0, "m")
+        helpers.assert_quantity_equal(q, [0.0, 2.0] * self.ureg.m)
+
+        q = QClone([1.0, 2.0], "m")
+        q[0] = self.Q_(100.0, "cm")
+        helpers.assert_quantity_equal(q, [1.0, 2.0] * self.ureg.m)
+
+        q = self.Q_([1.0, 2.0], "m")
+        q[0] = QClone(0.0, "m")
+        helpers.assert_quantity_equal(q, [0.0, 2.0] * self.ureg.m)
+
+        q = QClone([1.0, 2.0], "m")
+        with pytest.raises(DimensionalityError):
+            q[0] = self.Q_(1.0, "s")
 
     def test_iterator(self):
         for q, v in zip(self.q.flatten(), [1, 2, 3, 4]):
@@ -2009,3 +2067,10 @@ class TestToCompact:
     def test_to_compact_nan(self):
         assert self.q_one_nan.to_compact().units == "millimeter"
         assert self.q_all_nan.to_compact().units == "meter"
+
+    @pytest.mark.parametrize(
+        "values",
+        [[0, float("nan")], [0, float("inf")], [float("nan"), float("inf")]],
+    )
+    def test_to_compact_no_finite_power(self, values):
+        assert (values * self.ureg.m).to_compact().units == "meter"

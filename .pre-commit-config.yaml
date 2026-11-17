@@ -50,3 +50,5 @@ repos:
     entry: pixi run -e lint taplo fmt
     language: system
     types: [toml]
+    # keep one definition per line
+    exclude: ^pint/default_en\.toml$
