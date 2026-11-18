@@ -842,6 +842,9 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
     [energy] -> [frequency]: value / planck_constant
     # allow wavenumber / kayser
     [wavenumber] <-> [length]: 1 / value
+    # direct, so that zero energy or frequency converts to zero wavenumber
+    [frequency] -> [wavenumber]: n * value / speed_of_light
+    [wavenumber] -> [frequency]: speed_of_light * value / n
 @end
 
 @context boltzmann
