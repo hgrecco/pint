@@ -12,6 +12,7 @@ Pint Changelog
 
 ### Other changes
 
+- Fix converting zero energy or frequency to wavenumber (and back) in the `spectroscopy` context raising `ZeroDivisionError`, by relating frequency and wavenumber directly instead of through the wavelength (#2575)
 - Speed up `to_units_container` by using `isinstance` instead of `mro()` (#2565)
 - Add `array-api-compat` as an optional dependency (#2554)
 - Fix `Quantity(0, "degC") == Quantity(0, "degF")` and similar comparisons of zero in different offset units returning `True` (#2555)

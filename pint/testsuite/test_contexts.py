@@ -694,6 +694,27 @@ class TestDefinedContexts:
         for a, b in itertools.product(eq, eq):
             helpers.assert_quantity_almost_equal(a.to(b.units, "sp"), b, rtol=0.01)
 
+    def test_spectroscopy_zero_wavenumber(self, class_registry):
+        # energy and frequency convert to wavenumber directly, not through the
+        # wavelength, which is infinite at zero
+        ureg = class_registry
+        with ureg.context("sp"):
+            assert (0 * ureg.eV).to("1/cm").magnitude == 0
+            assert (0 * ureg.THz).to("1/cm").magnitude == 0
+            assert (0 / ureg.cm).to("eV").magnitude == 0
+            assert (0 / ureg.cm).to("THz").magnitude == 0
+
+        # the direct rules agree with the path through the wavelength
+        for n in (1, 1.5):
+            with ureg.context("sp", n=n):
+                for q in (2.0 * ureg.eV, 500.0 * ureg.THz):
+                    helpers.assert_quantity_almost_equal(
+                        q.to("1/cm"), (1 / q.to("nm")).to("1/cm"), rtol=1e-12
+                    )
+                    helpers.assert_quantity_almost_equal(
+                        q.to("1/cm").to(q.units), q, rtol=1e-12
+                    )
+
     def test_textile(self, class_registry):
         ureg = class_registry
         qty_direct = 1.331 * ureg.tex
