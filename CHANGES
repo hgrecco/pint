@@ -12,6 +12,10 @@ Pint Changelog
 
 ### Other changes
 
+- Fix centre alignment (`^`) in a quantity format spec being treated as the
+  negative-exponent unit flag when a width follows it, e.g. `f"{q:^30}"` now
+  centres the quantity instead of printing negative exponents, and
+  `f"{q:*^30}"` no longer raises (#2562)
 - Speed up `to_units_container` by using `isinstance` instead of `mro()` (#2565)
 - Add `array-api-compat` as an optional dependency (#2554)
 - Fix `Quantity(0, "degC") == Quantity(0, "degF")` and similar comparisons of zero in different offset units returning `True` (#2555)
