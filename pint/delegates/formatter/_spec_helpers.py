@@ -57,6 +57,27 @@ def parse_spec(spec: str) -> str:
     return result
 
 
+def _alignment_caret_index(spec: str) -> int:
+    """Index of a '^' used as centre alignment, or -1 if there is none.
+
+    In the format mini-language the ``[[fill]align]`` part comes first, so
+    an alignment '^' can only be the first character of the spec, or the
+    second one after a fill character. It counts as alignment only when a
+    width follows it; otherwise (e.g. in '~^P') the '^' is pint's
+    negative-exponent flag.
+    """
+
+    for idx in (0, 1):
+        if (
+            idx < len(spec)
+            and spec[idx] == "^"
+            and idx + 1 < len(spec)
+            and spec[idx + 1].isdigit()
+        ):
+            return idx
+    return -1
+
+
 def extract_custom_flags(spec: str) -> str:
     """Return custom flags present in a format specification
 
@@ -66,10 +87,20 @@ def extract_custom_flags(spec: str) -> str:
     if not spec:
         return ""
 
+    # A '^' that is centre alignment is part of the mini language,
+    # not a custom flag.
+    caret = _alignment_caret_index(spec)
+    if caret >= 0:
+        spec = spec[:caret] + spec[caret + 1 :]
+
     # sort by length, with longer items first
     known_flags = sorted(REGISTERED_FORMATTERS.keys(), key=len, reverse=True)
 
-    flag_re = re.compile("(" + "|".join(known_flags + ["~", "^", "/"]) + ")")
+    # The flags are literal strings: escape them, or '^' is read as an
+    # anchor and the negative-exponent flag is never extracted.
+    flag_re = re.compile(
+        "(" + "|".join(re.escape(flag) for flag in known_flags + ["~", "^", "/"]) + ")"
+    )
     custom_flags = flag_re.findall(spec)
 
     return "".join(custom_flags)
@@ -89,6 +120,28 @@ def remove_custom_flags(spec: str) -> str:
         if flag:
             spec = spec.replace(flag, "")
     return spec
+
+
+# Placeholder for a '^' that is centre alignment rather than the
+# negative-exponent flag; it survives flag removal untouched.
+_ALIGNMENT_CARET = "\ue000"
+
+
+def _split_flags(spec: str) -> tuple[str, str]:
+    """Split a format specification into (magnitude spec, unit flags).
+
+    A '^' that _alignment_caret_index identifies as centre alignment is
+    protected while the custom flags are removed/extracted, so it stays in
+    the magnitude spec for split_magnitude_spec to apply to the whole
+    quantity instead of reaching the unit as the negative-exponent flag.
+    """
+
+    caret = _alignment_caret_index(spec)
+    if caret >= 0:
+        spec = spec[:caret] + _ALIGNMENT_CARET + spec[caret + 1 :]
+    mspec = remove_custom_flags(spec)
+    uspec = extract_custom_flags(spec)
+    return mspec.replace(_ALIGNMENT_CARET, "^"), uspec
 
 
 # Regex for the Python format specification mini-language:
@@ -154,11 +207,9 @@ def _split_format(
     spec: str, default: str, separate_format_defaults: bool = True
 ) -> tuple[str, str, list[str]]:
     """Split format specification into magnitude and unit format."""
-    mspec = remove_custom_flags(spec)
-    uspec = extract_custom_flags(spec)
+    mspec, uspec = _split_flags(spec)
 
-    default_mspec = remove_custom_flags(default)
-    default_uspec = extract_custom_flags(default)
+    default_mspec, default_uspec = _split_flags(default)
 
     warns = []
     if separate_format_defaults in (False, None):

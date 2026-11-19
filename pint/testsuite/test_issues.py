@@ -1715,6 +1715,21 @@ def test_issue1798():
     assert f"{d:25.1f}" == "        3.0 dimensionless"
 
 
+def test_issue2562():
+    # A '^' in the fill/alignment position followed by a width is centre
+    # alignment, not pint's negative-exponent unit flag: the quantity must
+    # be centred and the unit must keep its normal exponents.
+    ureg = UnitRegistry()
+    q = ureg.Quantity(1.5, "meter / second")
+
+    assert f"{q:^30}" == "      1.5 meter / second      "
+    assert f"{q:*^30}" == "******1.5 meter / second******"
+    assert f"{q:^30~P}" == "           1.5 m/s            "
+
+    # Without a following width, '^' remains the negative-exponent flag.
+    assert f"{q:~^P}" == "1.5 m⋅s⁻¹"
+
+
 def test_issue1513():
     # ``dimensionless`` referenced by name resolves to "", which is not a key in
     # the unit registry; the recurse loops used to index it directly and raise

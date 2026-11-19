@@ -19,6 +19,7 @@ from ..._typing import Magnitude
 from ...compat import Unpack, babel_parse
 from ...util import iterable
 from ._compound_unit_helpers import BabelKwds
+from ._spec_helpers import extract_custom_flags
 from ._to_register import REGISTERED_FORMATTERS
 from .html import HTMLFormatter
 from .latex import LatexFormatter, SIunitxFormatter
@@ -183,7 +184,10 @@ class FullFormatter(BaseFormatter):
             use_plural=use_plural,
             length=babel_kwds.get("length", None),
             locale=locale,
-            as_ratio=False if "^" in spec else True,
+            # Look for the negative-exponent flag among the spec's custom
+            # flags: a '^' that is centre alignment (e.g. '^30') is part of
+            # the format mini-language and must not flip the unit.
+            as_ratio=False if "^" in extract_custom_flags(spec) else True,
         )
 
     def format_measurement(
