@@ -681,6 +681,62 @@ class TestNumpyMathematicalFunctions(TestNumpyMethods):
         with pytest.raises(DimensionalityError):
             op.add(b, a)
 
+    def test_add_subtract_offset_units(self):
+        # np.add / np.subtract must follow the same offset unit rules as
+        # the + / - operators (see #2578): subtracting two temperatures in
+        # offset units gives a delta unit, adding them is ambiguous, and
+        # adding/subtracting a delta quantity keeps the offset unit.
+        a = self.Q_([10.0, 20.0], "degC")
+        b = self.Q_([3.0, 5.0], "degC")
+        d = self.Q_([1.0, 2.0], "delta_degC")
+
+        helpers.assert_quantity_almost_equal(
+            np.subtract(a, b), self.Q_([7.0, 15.0], "delta_degC")
+        )
+        helpers.assert_quantity_almost_equal(
+            np.subtract(a, b).to("kelvin"), self.Q_([7.0, 15.0], "kelvin")
+        )
+        with pytest.raises(OffsetUnitCalculusError):
+            np.add(a, b)
+        helpers.assert_quantity_almost_equal(
+            np.add(a, d), self.Q_([11.0, 22.0], "degC")
+        )
+        helpers.assert_quantity_almost_equal(
+            np.subtract(a, d), self.Q_([9.0, 18.0], "degC")
+        )
+        helpers.assert_quantity_almost_equal(
+            np.add(d, a), self.Q_([11.0, 22.0], "degC")
+        )
+        helpers.assert_quantity_almost_equal(
+            np.subtract(d, a), self.Q_([-9.0, -18.0], "degC")
+        )
+        helpers.assert_quantity_almost_equal(
+            np.add(d, d), self.Q_([2.0, 4.0], "delta_degC")
+        )
+
+        # Mixed offset units convert like the operators do (including the
+        # same floating-point noise in the degF -> degC conversion).
+        helpers.assert_quantity_almost_equal(
+            np.subtract(self.Q_([0.0], "degC"), self.Q_([32.0], "degF")),
+            self.Q_([0.0], "degC") - self.Q_([32.0], "degF"),
+        )
+
+        # Scalar quantities and adding zero behave like the operators.
+        helpers.assert_quantity_almost_equal(
+            np.subtract(self.Q_(10.0, "degC"), self.Q_(3.0, "degC")),
+            self.Q_(7.0, "delta_degC"),
+        )
+        helpers.assert_quantity_almost_equal(np.add(a, 0), a)
+        helpers.assert_quantity_almost_equal(np.add(0, a), a)
+        with pytest.raises(OffsetUnitCalculusError):
+            np.add(self.Q_(10.0, "degC"), self.Q_(3.0, "degC"))
+
+        # Logarithmic units are left as they are (see #2485).
+        helpers.assert_quantity_almost_equal(
+            np.add(self.Q_([10.0, 20.0], "dB"), self.Q_([3.0, 5.0], "dB")),
+            self.Q_([13.0, 25.0], "dB"),
+        )
+
     def test_power(self):
         arr = np.array(range(3), dtype=float)
         q = self.Q_(arr, "meter")
