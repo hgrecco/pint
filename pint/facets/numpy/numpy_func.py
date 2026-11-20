@@ -8,6 +8,7 @@ pint.facets.numpy.numpy_func
 
 from __future__ import annotations
 
+import operator
 import warnings
 from inspect import signature
 from itertools import chain
@@ -577,14 +578,69 @@ def _power(x1, x2):
 
 @implements("add", "ufunc")
 def _add(x1, x2, *args, **kwargs):
+    if not args and not kwargs:
+        result = _add_sub_with_offset_units(x1, x2, operator.add, "__radd__")
+        if result is not None:
+            return result
     (x1, x2), output_wrap = unwrap_and_wrap_consistent_units(x1, x2)
     return output_wrap(np.add(x1, x2, *args, **kwargs))
 
 
 @implements("subtract", "ufunc")
 def _subtract(x1, x2, *args, **kwargs):
+    if not args and not kwargs:
+        result = _add_sub_with_offset_units(x1, x2, operator.sub, "__rsub__")
+        if result is not None:
+            return result
     (x1, x2), output_wrap = unwrap_and_wrap_consistent_units(x1, x2)
     return output_wrap(np.subtract(x1, x2, *args, **kwargs))
+
+
+def _has_offset_units(arg):
+    """Check whether arg is a Quantity with offset units (e.g. degC).
+
+    Logarithmic units (e.g. dB) are not offset units for this purpose:
+    their NumPy add/subtract behavior is left as it is (see #2485).
+    """
+    if not _is_quantity(arg):
+        return False
+    if arg._is_logarithmic:
+        return False
+    return bool(arg._get_non_multiplicative_units())
+
+
+def _add_sub_with_offset_units(x1, x2, op, reflected_op):
+    """Add/subtract following the Quantity operator rules for offset units.
+
+    ``unwrap_and_wrap_consistent_units`` converts both operands to the first
+    operand's units and wraps the result in those units, which skips the
+    offset/delta handling in ``Quantity._add_sub``: ``degC - degC`` would
+    come out as ``degC`` instead of ``delta_degC``, ``degC + degC`` would
+    silently succeed, and ``degC + delta_degC`` would fail. When either
+    operand has offset units, delegate to the ``+``/``-`` operators instead
+    (this is the add/sub counterpart of #1335, which was fixed for
+    multiplication and division).
+
+    The operators are invoked on the Quantity objects directly (not via
+    ``np.add``/``np.subtract``) so the call does not re-enter the ufunc
+    dispatch. Returns None when the operator path does not apply (no offset
+    units, a sequence of Quantities, which the plain magnitude path already
+    handles element-wise, or extra ufunc arguments), in which case the
+    caller falls back to the previous behavior.
+    """
+    if not (_has_offset_units(x1) or _has_offset_units(x2)):
+        return None
+    # A sequence of Quantities (e.g. a list) is handled element-wise by the
+    # plain magnitude path; the operator path only covers plain operands.
+    # Note the explicit _is_quantity check: an array Quantity is itself
+    # iterable, so _is_sequence_with_quantity_elements would match it too.
+    if (not _is_quantity(x1) and _is_sequence_with_quantity_elements(x1)) or (
+        not _is_quantity(x2) and _is_sequence_with_quantity_elements(x2)
+    ):
+        return None
+    if _is_quantity(x1):
+        return op(x1, x2)
+    return getattr(x2, reflected_op)(x1)
 
 
 # Define custom function implementations
