@@ -835,10 +835,10 @@ def _eig(a):
 def _eigh(a, UPLO="L"):
     # In the result, eigenvalues have the same units as a, and eigenvectors are dimensionless
     a = _base_unit_if_needed(a)
-    eigenvalues, eigenvectors = np.linalg.eigh(a._magnitude, UPLO=UPLO)
-    return np.linalg.linalg.EighResult(
-        eigenvalues * a.units,
-        eigenvectors * a.units._REGISTRY.dimensionless,
+    result = np.linalg.eigh(a._magnitude, UPLO=UPLO)
+    return type(result)(
+        result.eigenvalues * a.units,
+        result.eigenvectors * a.units._REGISTRY.dimensionless,
     )
 
 

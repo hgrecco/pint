@@ -1930,6 +1930,24 @@ class TestNumpyUnclassified(TestNumpyMethods):
         with pytest.raises(OffsetUnitCalculusError):
             np.linalg.eig(A)
 
+    def test_linalg_eigh(self):
+        matrix = np.array([[2.0, 1.0], [1.0, 2.0]])
+        result = np.linalg.eigh(matrix * self.ureg.m)
+        assert type(result) is type(np.linalg.eigh(matrix))
+
+        values, vectors = result
+        assert values is result.eigenvalues
+        assert vectors is result.eigenvectors
+        assert values.units == self.ureg.m
+        assert vectors.units == self.ureg.dimensionless
+        np.testing.assert_allclose(values.magnitude, [1.0, 3.0])
+        np.testing.assert_allclose(
+            matrix @ vectors.magnitude, vectors.magnitude * values.magnitude
+        )
+        np.testing.assert_allclose(
+            vectors.magnitude.T @ vectors.magnitude, np.eye(2), atol=1e-14
+        )
+
     def test_linalg_det(self):
         A = (
             np.array([[[1, 2], [3, 4]], [[1, 2], [2, 1]], [[1, 3], [3, 1]]])
