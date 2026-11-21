@@ -167,17 +167,15 @@ def siunitx_format_unit(
             lpick.append(_tothe(abs(power)))
             continue
 
-        prefix = None
-        # TODO: fix this to be fore efficient and detect also aliases.
-        for p in registry._prefixes.values():
-            p = str(p.name)
-            if len(p) > 0 and unit.find(p) == 0:
-                prefix = p
-                unit = unit.replace(prefix, "", 1)
+        # Only split off a prefix the registry recognises (e.g. not "micron").
+        prefix = ""
+        candidates = registry.parse_unit_name(unit)
+        if candidates:
+            prefix, unit, _ = candidates[0]
 
         if power < 0:
             lpick.append(r"\per")
-        if prefix is not None:
+        if prefix:
             lpick.append(rf"\{prefix}")
         lpick.append(rf"\{unit}")
         lpick.append(rf"{_tothe(abs(power))}")
