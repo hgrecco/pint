@@ -143,6 +143,21 @@ def test_format_temperature_siunitx_compound(func_registry):
     assert format(u, "Lx") == r"\si[]{\joule\per\degreeCelsius\squared}"
 
 
+@pytest.mark.parametrize(
+    ("unit", "siunitx"),
+    [
+        ("micron", r"\si[]{\micron}"),
+        ("decade", r"\si[]{\decade}"),
+        ("decibelwatt", r"\si[]{\decibelwatt}"),
+        ("decibel", r"\si[]{\decibel}"),
+        ("kilometer / micron", r"\si[]{\kilo\meter\per\micron}"),
+    ],
+)
+def test_format_siunitx_unit_starting_with_prefix_name(func_registry, unit, siunitx):
+    """A unit whose name merely starts with a prefix name is not split."""
+    assert format(func_registry.Unit(unit), "Lx") == siunitx
+
+
 @helpers.requires_numpy
 @pytest.mark.parametrize(
     "spec, shape, expected",
