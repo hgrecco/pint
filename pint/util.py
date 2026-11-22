@@ -855,9 +855,9 @@ class ParserHelper(UnitsContainer):
         return self.__class__(self.scale, d, non_int_type=self._non_int_type)
 
     def __str__(self):
-        tmp = "{%s}" % ", ".join(
+        tmp = "{{{}}}".format(", ".join(
             [f"'{key}': {value}" for key, value in sorted(self._d.items())]
-        )
+        ))
         return f"{self.scale} {tmp}"
 
     def __repr__(self):
