@@ -66,8 +66,8 @@ def missing_dependency(
 
     def _inner(*args: Any, **kwargs: Any) -> NoReturn:
         raise Exception(
-            "This feature requires %s. Please install it by running:\n"
-            "pip install %s" % (display_name, package)
+            f"This feature requires {display_name}. Please install it by running:\n"
+            "pip install {package}"
         )
 
     return _inner
