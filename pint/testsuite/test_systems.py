@@ -273,7 +273,7 @@ class TestSystem(QuantityTestCase):
         g = ureg.get_group("test-imperial")
         g.add_units("inch", "yard", "pint")
 
-        lines = ["@system %s using test-imperial" % sysname, "mph:meter"]
+        lines = [f"@system {sysname} using test-imperial", "mph:meter"]
 
         s = ureg.System.from_lines(lines, ureg.get_base_units)
         internal(ureg)._systems[s.name] = s
