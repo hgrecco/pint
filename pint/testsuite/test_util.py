@@ -106,6 +106,10 @@ class TestUnitsContainer:
         self._test_inplace(op.ipow, z, 2, UnitsContainer(meter=2, second=-4))
         self._test_inplace(op.ipow, z, -2, UnitsContainer(meter=-2, second=4))
 
+    def test_unitcontainer_zero_exponent(self):
+        assert UnitsContainer(meter=1, second=-2) ** 0 == UnitsContainer()
+        assert UnitsContainer().add("meter", 0) == UnitsContainer()
+
     def test_string_comparison(self):
         x = UnitsContainer(meter=1)
         y = UnitsContainer(second=1)
@@ -197,6 +201,10 @@ class TestParseHelper:
         assert 4.0 / z() == ParserHelper(2.0, meter=-2)
         assert "seconds" / z() == ParserHelper(0.5, seconds=1, meter=-2)
         assert dict(seconds=1) / z() == ParserHelper(0.5, seconds=1, meter=-2)
+
+    def test_zero_exponent(self):
+        assert ParserHelper(2.0, meter=2) ** 0 == ParserHelper(1.0)
+        assert ParserHelper.from_string("meter ** 0") == ParserHelper()
 
     def _test_eval_token(self, expected, expression):
         token = next(pint_eval.tokenizer(expression))

@@ -518,7 +518,7 @@ class UnitsContainer(Mapping[str, Scalar]):
         if newval:
             new._d[key] = newval
         else:
-            new._d.pop(key)
+            new._d.pop(key, None)
         new._hash = None
         return new
 
@@ -659,8 +659,10 @@ class UnitsContainer(Mapping[str, Scalar]):
             raise TypeError(err.format(type(other)))
 
         new = self.copy()
-        for key, value in new._d.items():
+        for key in self._d:
             new._d[key] *= other
+            if new._d[key] == 0:
+                del new._d[key]
         new._hash = None
         return new
 
@@ -887,6 +889,8 @@ class ParserHelper(UnitsContainer):
         d = self._d.copy()
         for key in self._d:
             d[key] *= other
+            if d[key] == 0:
+                del d[key]
         return self.__class__(self.scale**other, d, non_int_type=self._non_int_type)
 
     def __truediv__(self, other):
