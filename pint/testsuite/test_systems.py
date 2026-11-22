@@ -244,7 +244,7 @@ class TestSystem(QuantityTestCase):
         g.add_units("inch", "yard", "pint")
         ureg.get_compatible_units("meter", "test-imperial")
 
-        lines = ["@system %s using test-imperial" % sysname, "pint:meter"]
+        lines = [f"@system {sysname} using test-imperial", "pint:meter"]
 
         s = ureg.System.from_lines(lines, ureg.get_base_units)
         internal(ureg)._systems[s.name] = s
