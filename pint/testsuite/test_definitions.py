@@ -228,7 +228,7 @@ class TestDefinition:
 
         eulersnumber = math.e
         x = Definition.from_string(
-            "neper = 1 ; logbase: %1.50f; logfactor: 0.5 = Np" % eulersnumber
+            f"neper = 1 ; logbase: {eulersnumber:1.50f}; logfactor: 0.5 = Np"
         )
         assert isinstance(x, UnitDefinition)
         assert not x.is_base
