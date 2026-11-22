@@ -209,7 +209,7 @@ class TestSystem(QuantityTestCase):
         c = ureg.get_compatible_units("meter", "test-imperial")
         assert c == frozenset([ureg.inch, ureg.yard])
 
-        lines = ["@system %s using test-imperial" % sysname, "inch"]
+        lines = [f"@system {sysname} using test-imperial", "inch"]
 
         ureg.System.from_lines(lines, lambda x: x)
         c = ureg.get_compatible_units("meter", sysname)
