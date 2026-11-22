@@ -348,6 +348,7 @@ class TestUnit(QuantityTestCase):
         ("unit", "power_ratio", "expectation", "expected_unit"),
         [
             ("m", 2, does_not_raise(), "m**2"),
+            ("m", 0, does_not_raise(), "dimensionless"),
             ("m", {}, pytest.raises(TypeError), None),
         ],
     )
@@ -356,6 +357,10 @@ class TestUnit(QuantityTestCase):
             x = self.U_(unit)
             assert_type(x**2, UnitRegistry.Unit)
             assert x**power_ratio == self.U_(expected_unit)
+
+    def test_unit_zero_exponent_string(self):
+        assert self.U_("m**0") == self.U_("dimensionless")
+        assert self.Q_(2, "m**0") == self.Q_(2)
 
     def test_is_compatible_with(self):
         unit = self.ureg.Unit("m")
