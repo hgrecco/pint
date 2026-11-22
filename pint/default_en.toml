@@ -270,7 +270,7 @@ byte = { value = "8 * bit", symbol = "B", aliases = ["octet"] }
 ## NOTE: B (byte) symbol can conflict with Bell
 
 # Dimensionless ratios
-percent = { value = "0.01", symbol = "%" }
+percent = { value = "0.01", symbol = "%", aliases = ["pct"] }
 permille = { value = "0.001", symbol = "‰" }            # NOTE: ‰ = U+2030 (PER MILLE SIGN)
 ppm = { value = "1e-6" }
 strain = { value = "1", symbol = "ε", aliases = ["ϵ"] } # NOTE: ε = U+03B5 (GREEK SMALL LETTER EPSILON), ϵ = U+03F5 (GREEK LUNATE EPSILON SYMBOL)
