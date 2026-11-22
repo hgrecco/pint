@@ -216,6 +216,20 @@ class TestParseHelper:
                 assert math.isnan(p.scale)
                 assert dict(p) == {"kg": 1}
 
+    @pytest.mark.parametrize(
+        "scale, units, expected",
+        [
+            (1, {}, "1 {}"),
+            (2, {"meter": 1}, "2 {'meter': 1}"),
+            (0.5, {"second": -2, "meter": 1},
+            "0.5 {'meter': 1, 'second': -2}"),
+            (-3, {"kilogram": 2}, "-3 {'kilogram': 2}"),
+        ],
+    )
+    def test_str(self, scale, units, expected):
+        helper = ParserHelper(scale, units)
+        assert str(helper) == expected              
+
 
 @pytest.mark.parametrize("non_int_type", [float, Decimal, Fraction])
 @pytest.mark.parametrize("expression", ["kilo-watt", "meter+second"])
