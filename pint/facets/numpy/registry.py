@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Literal, overload, override
 from ...compat import (
     HAS_NUMPY,
     TypeAlias,
-    is_duck_array,
+    is_ndarray_or_duck,
     np_timedelta64,
 )
 from ..plain import GenericPlainRegistry, PlainQuantity
@@ -65,7 +65,7 @@ class GenericNumpyRegistry[QuantityT: Quantity, UnitT: Unit](
             )
         if force_ndarray is None:
             force_ndarray = self.force_ndarray
-        if force_ndarray or not is_duck_array(value):
+        if force_ndarray or not is_ndarray_or_duck(value):
             return np.asarray(value)
         return value
 
@@ -92,7 +92,9 @@ class GenericNumpyRegistry[QuantityT: Quantity, UnitT: Unit](
         if value is NotImplemented:
             return NotImplemented
         # make sure to handle automatic ndarray conversion
-        if self.force_ndarray or (self.force_ndarray_like and not is_duck_array(value)):
+        if self.force_ndarray or (
+            self.force_ndarray_like and not is_ndarray_or_duck(value)
+        ):
             # NOTE: per the check above, we know numpy is installed
             return np.asarray(value)
         return value
@@ -100,7 +102,7 @@ class GenericNumpyRegistry[QuantityT: Quantity, UnitT: Unit](
     def _as_magnitude_and_units(self, value: object) -> tuple[object, str] | None:
         if isinstance(value, np_timedelta64) or (
             not isinstance(value, PlainQuantity)
-            and is_duck_array(value)
+            and is_ndarray_or_duck(value)
             and value.dtype.type == np_timedelta64
         ):
             return value.astype(float), _DTYPE_TO_UNIT[str(value.dtype)]

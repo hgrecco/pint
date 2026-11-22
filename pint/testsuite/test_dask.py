@@ -11,6 +11,8 @@ from pint import UnitRegistry
 np = pytest.importorskip("numpy", reason="NumPy is not available")
 dask = pytest.importorskip("dask", reason="Dask is not available")
 distributed = pytest.importorskip("distributed", reason="Distributed is not available")
+# NOTE: correct Dask array handling is only guaranteed when `array-api-compat` is installed
+pytest.importorskip("array_api_compat", reason="array-api-compat is not available")
 
 from dask.distributed import Client
 from distributed.client import futures_of

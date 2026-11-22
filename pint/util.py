@@ -34,12 +34,12 @@ from typing import (
 
 from . import pint_eval
 from ._typing import Scalar
-from .compat import NUMERIC_TYPES
+from .compat import NUMERIC_TYPES, deprecated
 from .errors import DefinitionSyntaxError
 from .pint_eval import build_eval_tree
 
 if TYPE_CHECKING:
-    from typing_extensions import TypeIs
+    from typing import TypeIs
 
     from ._typing import QuantityOrUnitLike
     from .facets.plain import GenericPlainRegistry
@@ -57,6 +57,10 @@ def _noop[T](x: T) -> T:
     return x
 
 
+@deprecated(
+    "matrix_to_string is deprecated and will be removed in a future release.",
+    category=DeprecationWarning,
+)
 def matrix_to_string(
     matrix: ItMatrix,
     row_headers: Iterable[str] | None = None,
@@ -1071,18 +1075,17 @@ def to_units_container(
     -------
     UnitsContainer
     """
-    mro = type(unit_like).mro()
-    if UnitsContainer in mro:
+    if isinstance(unit_like, UnitsContainer):
         return unit_like
-    elif SharedRegistryObject in mro:
+    elif isinstance(unit_like, SharedRegistryObject):
         return unit_like._units
-    elif str in mro:
+    elif isinstance(unit_like, str):
         if registry:
             unit_like = registry._apply_preprocessors(unit_like)
             return registry.parse_units_as_container(unit_like)
         else:
             return ParserHelper.from_string(unit_like)
-    elif dict in mro:
+    elif isinstance(unit_like, dict):
         if registry:
             return registry.UnitsContainer(unit_like)
         else:

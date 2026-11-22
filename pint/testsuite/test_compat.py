@@ -14,6 +14,28 @@ def test_eq(check_all):
 
 
 @helpers.requires_numpy
+@helpers.requires_array_api_strict
+def test_eq_array_api():
+    xp = helpers.array_api_strict
+    # array == array
+    assert eq(xp.asarray([1, 2]), xp.asarray([1, 2]), True)
+    assert not eq(xp.asarray([1, 2]), xp.asarray([1, 3]), True)
+    np.testing.assert_equal(
+        np.asarray(eq(xp.asarray([1, 2]), xp.asarray([1, 2]), False)),
+        np.array([True, True]),
+    )
+    np.testing.assert_equal(
+        np.asarray(eq(xp.asarray([1, 2]), xp.asarray([1, 3]), False)),
+        np.array([True, False]),
+    )
+    # array == scalar
+    assert eq(1, xp.asarray([1, 1]), True)
+    assert eq(xp.asarray([1, 1]), 1, True)
+    assert not eq(1, xp.asarray([1, 2]), True)
+    assert not eq(xp.asarray([1, 2]), 1, True)
+
+
+@helpers.requires_numpy
 def test_eq_numpy():
     assert eq(np.array([1, 2]), np.array([1, 2]), True)
     assert not eq(np.array([1, 2]), np.array([1, 3]), True)
@@ -39,6 +61,19 @@ def test_isnan(check_all):
     assert not isnan(datetime(2000, 1, 1), check_all)
     assert not isnan(timedelta(seconds=1), check_all)
     assert not isnan("foo", check_all)
+
+
+@helpers.requires_numpy
+@helpers.requires_array_api_strict
+def test_isnan_array_api():
+    xp = helpers.array_api_strict
+    assert isnan(xp.nan, True)
+    assert isnan(xp.nan, False)
+    assert not isnan(xp.asarray([0, 0]), True)
+    assert isnan(xp.asarray([0, np.nan]), True)
+    np.testing.assert_equal(
+        np.asarray(isnan(xp.asarray([1, np.nan]), False)), np.array([False, True])
+    )
 
 
 @helpers.requires_numpy
@@ -80,6 +115,21 @@ def test_zero_or_nan(check_all):
     assert not zero_or_nan(datetime(2000, 1, 1), check_all)
     assert not zero_or_nan(timedelta(seconds=1), check_all)
     assert not zero_or_nan("foo", check_all)
+
+
+@helpers.requires_numpy
+@helpers.requires_array_api_strict
+def test_zero_or_nan_array_api():
+    xp = helpers.array_api_strict
+    assert zero_or_nan(xp.nan, True)
+    assert zero_or_nan(xp.nan, False)
+    assert zero_or_nan(xp.asarray([0, xp.nan]), True)
+    assert not zero_or_nan(xp.asarray([1, xp.nan]), True)
+    assert not zero_or_nan(xp.asarray([0, 1]), True)
+    np.testing.assert_equal(
+        np.asarray(zero_or_nan(xp.asarray([0, 1, xp.nan]), False)),
+        np.array([True, False, True]),
+    )
 
 
 @helpers.requires_numpy
