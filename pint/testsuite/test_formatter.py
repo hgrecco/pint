@@ -16,31 +16,31 @@ class TestFormatter:
 
     def test_formatter(self):
         assert formatter({}.items(), ()) == ""
-        assert formatter(dict(meter=1).items(), ()) == "meter"
-        assert formatter((), dict(meter=-1).items()) == "1 / meter"
-        assert formatter((), dict(meter=-1).items(), as_ratio=False) == "meter ** -1"
+        assert formatter({"meter": 1}.items(), ()) == "meter"
+        assert formatter((), {"meter": -1}.items()) == "1 / meter"
+        assert formatter((), {"meter": -1}.items(), as_ratio=False) == "meter ** -1"
 
         assert (
-            formatter((), dict(meter=-1, second=-1).items(), as_ratio=False)
+            formatter((), {"meter": -1, "second": -1}.items(), as_ratio=False)
             == "meter ** -1 * second ** -1"
         )
         assert (
             formatter(
                 (),
-                dict(meter=-1, second=-1).items(),
+                {"meter": -1, "second": -1}.items(),
             )
             == "1 / meter / second"
         )
         assert (
-            formatter((), dict(meter=-1, second=-1).items(), single_denominator=True)
+            formatter((), {"meter": -1, "second": -1}.items(), single_denominator=True)
             == "1 / (meter * second)"
         )
         assert (
-            formatter((), dict(meter=-1, second=-2).items())
+            formatter((), {"meter": -1, "second": -2}.items())
             == "1 / meter / second ** 2"
         )
         assert (
-            formatter((), dict(meter=-1, second=-2).items(), single_denominator=True)
+            formatter((), {"meter": -1, "second": -2}.items(), single_denominator=True)
             == "1 / (meter * second ** 2)"
         )
 
@@ -59,32 +59,33 @@ class TestFormatter:
 
     def test_pf_formatter(self):
         assert pf_formatter({}.items()) == ""
-        assert pf_formatter(dict(meter=1).items()) == "meter"
-        assert pf_formatter(dict(meter=-1).items()) == "1 / meter"
-        assert pf_formatter(dict(meter=-1).items(), as_ratio=False) == "meter ** -1"
+        assert pf_formatter({"meter": 1}.items()) == "meter"
+        assert pf_formatter({"meter": -1}.items()) == "1 / meter"
+        assert pf_formatter({"meter": -1}.items(), as_ratio=False) == "meter ** -1"
 
         assert (
-            pf_formatter(dict(meter=-1, second=-1).items(), as_ratio=False)
+            pf_formatter({"meter": -1, "second": -1}.items(), as_ratio=False)
             == "meter ** -1 * second ** -1"
         )
         assert (
             pf_formatter(
-                dict(meter=-1, second=-1).items(),
+                {"meter": -1, "second": -1}.items(),
             )
             == "1 / meter / second"
         )
         assert (
-            pf_formatter(dict(meter=-1, second=-1).items(), single_denominator=True)
+            pf_formatter({"meter": -1, "second": -1}.items(), single_denominator=True)
             == "1 / (meter * second)"
         )
         assert (
-            pf_formatter(dict(meter=-1, second=-2).items()) == "1 / meter / second ** 2"
+            pf_formatter({"meter": -1, "second": -2}.items())
+            == "1 / meter / second ** 2"
         )
         assert (
-            pf_formatter(dict(second=-2, meter=-1).items(), sort=False)
+            pf_formatter({"second": -2, "meter": -1}.items(), sort=False)
             == "1 / second ** 2 / meter"
         )
         assert (
-            pf_formatter(dict(meter=-1, second=-2).items(), single_denominator=True)
+            pf_formatter({"meter": -1, "second": -2}.items(), single_denominator=True)
             == "1 / (meter * second ** 2)"
         )

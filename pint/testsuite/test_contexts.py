@@ -55,8 +55,8 @@ def add_arg_ctxs(ureg: UnitRegistry):
 
 def add_argdef_ctxs(ureg: UnitRegistry):
     a, b = UnitsContainer({"[length]": 1}), UnitsContainer({"[time]": -1})
-    d = Context("lc", defaults=dict(n=1))
-    assert d.defaults == dict(n=1)
+    d = Context("lc", defaults={"n": 1})
+    assert d.defaults == {"n": 1}
 
     d.add_transformation(a, b, lambda ureg, x, n: ureg.speed_of_light / x / n)
     d.add_transformation(b, a, lambda ureg, x, n: ureg.speed_of_light / x / n)
@@ -73,8 +73,8 @@ def add_argdef_ctxs(ureg: UnitRegistry):
 
 def add_sharedargdef_ctxs(ureg: UnitRegistry):
     a, b = UnitsContainer({"[length]": 1}), UnitsContainer({"[time]": -1})
-    d = Context("lc", defaults=dict(n=1))
-    assert d.defaults == dict(n=1)
+    d = Context("lc", defaults={"n": 1})
+    assert d.defaults == {"n": 1}
 
     d.add_transformation(a, b, lambda ureg, x, n: ureg.speed_of_light / x / n)
     d.add_transformation(b, a, lambda ureg, x, n: ureg.speed_of_light / x / n)
@@ -82,7 +82,7 @@ def add_sharedargdef_ctxs(ureg: UnitRegistry):
     ureg.add_context(d)
 
     a, b = UnitsContainer({"[length]": 1}), UnitsContainer({"[current]": 1})
-    d = Context("ab", defaults=dict(n=0))
+    d = Context("ab", defaults={"n": 0})
     d.add_transformation(a, b, lambda ureg, x, n: ureg.ampere * ureg.meter * n / x)
     d.add_transformation(b, a, lambda ureg, x, n: ureg.ampere * ureg.meter * n / x)
 
