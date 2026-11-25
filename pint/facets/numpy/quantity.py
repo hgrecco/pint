@@ -374,11 +374,14 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
             or np.all(qm == 0)
             or np.all(np.isnan(qm))
             or np.all(np.isinf(qm))
+            or (unit is None and self._get_non_multiplicative_units())
         ):
             return self
 
         SI_powers, SI_bases = _get_si_prefixes(self._REGISTRY)
         q_base, unit_str, unit_power = _get_compact_base(self, unit)
+        if q_base._get_non_multiplicative_units():
+            return q_base
 
         magnitude = q_base.magnitude
         # Support uncertainties
