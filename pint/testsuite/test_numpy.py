@@ -2074,3 +2074,35 @@ class TestToCompact:
     )
     def test_to_compact_no_finite_power(self, values):
         assert (values * self.ureg.m).to_compact().units == "meter"
+
+    @pytest.mark.parametrize(
+        ("values", "maximum_prefix"),
+        [
+            ([0.001, 0.002], False),
+            ([1000.0, 2000.0], False),
+            ([10.0, 2000.0], True),
+        ],
+    )
+    def test_to_compact_offset_unit(self, values, maximum_prefix):
+        q = self.Q_(np.array(values, dtype=float), "degree_Celsius")
+        compact = q.to_compact(maximumPrefix=maximum_prefix)
+        np.testing.assert_allclose(compact.magnitude, values)
+        assert compact.units == q.units
+
+    def test_to_compact_offset_unit_explicit_multiplicative_target(self):
+        q = self.Q_(np.array([1000.0, 2000.0]), "degree_Celsius")
+        compact = q.to_compact(unit="kelvin")
+        assert compact.units == "kilokelvin"
+        np.testing.assert_allclose(compact.magnitude, [1.27315, 2.27315])
+
+    def test_to_compact_offset_unit_explicit_offset_target(self):
+        q = self.Q_(np.array([1000.0, 2000.0]), "degree_Celsius")
+        compact = q.to_compact(unit="degree_Fahrenheit")
+        assert compact.units == "degree_Fahrenheit"
+        np.testing.assert_allclose(compact.magnitude, [1832.0, 3632.0])
+
+    def test_to_compact_delta_offset_unit_still_compacts(self):
+        q = self.Q_(np.array([1000.0, 2000.0]), "delta_degree_Celsius")
+        compact = q.to_compact()
+        assert compact.units == "kilodelta_degree_Celsius"
+        np.testing.assert_allclose(compact.magnitude, [1.0, 2.0])
