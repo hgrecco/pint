@@ -418,7 +418,9 @@ class PrettyFormatter(BaseFormatter):
             registry.separate_format_defaults,
         )
 
-        unc_spec = meas_spec
+        # uncertainties only accepts its own flags (such as P) at the end of the spec,
+        # so drop pint's modifiers and append the pretty flag.
+        unc_spec = remove_custom_flags(meas_spec) + "P"
         joint_fstring = "{} {}"
 
         return join_unc(

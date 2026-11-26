@@ -219,6 +219,28 @@ class TestMeasurement(QuantityTestCase):
         func_registry.formatter.default_format = spec
         assert f"{m}" == expected
 
+    @pytest.mark.parametrize(
+        "spec, expected",
+        [
+            ("~P", "(4.00 ± 0.10) s²"),
+            ("P~", "(4.00 ± 0.10) s²"),
+            (".1f~P", "(4.0 ± 0.1) s²"),
+            (".1fP~", "(4.0 ± 0.1) s²"),
+            (".1u~P", "(4.0 ± 0.1) s²"),
+            (".1e~P", "(4.0 ± 0.1)×10⁰ s²"),
+            ("P.1f", "(4.0 ± 0.1) second²"),
+        ],
+    )
+    def test_format_pretty_modifiers(self, func_registry, spec, expected):
+        v, u = (
+            func_registry.Quantity(4.0, "s ** 2"),
+            func_registry.Quantity(0.1, "s ** 2"),
+        )
+        m = func_registry.Measurement(v, u)
+        assert format(m, spec) == expected
+        func_registry.formatter.default_format = spec
+        assert f"{m}" == expected
+
     def test_raise_build(self):
         v, u = self.Q_(1.0, "s"), self.Q_(0.1, "s")
         o = self.Q_(0.1, "m")
