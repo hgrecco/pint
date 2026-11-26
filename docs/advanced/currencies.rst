@@ -81,6 +81,12 @@ currency on its own dimension, and then implement transformations::
     >>> q
     0.9024969516 EUR
 
+These transformations match the dimensionality of a currency amount. To
+convert ``EUR / hour`` to ``GBP / hour``, define a rule from
+``[currency_EUR] / [time]`` to ``[currency_GBP] / [time]``
+(see :ref:`compound-contexts`). For exchange rates that fit the simplified
+model, unit redefinitions cover both currency amounts and compound units.
+
 More sophisticated formulas, e.g. dealing with flat fees and thresholds, can be
 implemented with arbitrary python code by programmatically defining a context (see
 :ref:`contexts`).

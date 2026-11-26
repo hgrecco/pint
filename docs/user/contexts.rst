@@ -216,6 +216,38 @@ It is also possible to create anonymous contexts without invoking add_context:
    >>> ureg("1 s").to("km", c)
    Quantity(299792.458, "kilometer")
 
+.. _compound-contexts:
+
+Transforming compound quantities
+--------------------------------
+
+Pint uses the complete dimensionality of the source and destination to find a
+path through the active context's transformations. The ``chemistry`` context
+can convert an amount of substance to a mass given a molar mass. A molar flow
+rate needs a rule that includes the time dimension.
+
+.. doctest::
+
+    >>> molar_flow = ureg("2 mol/s")
+    >>> molar_mass = ureg("5 g/mol")
+    >>> molar_flow.to("g/s", "chemistry", mw=molar_mass)
+    Traceback (most recent call last):
+    ...
+    DimensionalityError: Cannot convert from 'mole / second' ([substance] / [time]) to 'gram / second' ([mass] / [time])
+
+Define the transformation using the full dimensionality on each side.
+
+.. doctest::
+
+    >>> mass_flow = pint.Context()
+    >>> mass_flow.add_transformation(
+    ...     "[substance] / [time]",
+    ...     "[mass] / [time]",
+    ...     lambda ureg, value, mw: value * mw,
+    ... )
+    >>> molar_flow.to("g/s", mass_flow, mw=molar_mass)
+    Quantity(10.0, "gram / second")
+
 Using contexts for unit redefinition
 ------------------------------------
 
