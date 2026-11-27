@@ -74,12 +74,12 @@ class HTMLFormatter(BaseFormatter):
                         + "</pre>"
                     )
 
-        m = _EXP_PATTERN.match(mstr)
-        _exp_formatter = lambda s: f"<sup>{s}</sup>"
-
-        if m:
-            exp = int(m.group(2) + m.group(3))
-            mstr = _EXP_PATTERN.sub(r"\1×10" + _exp_formatter(exp), mstr)
+        if _EXP_PATTERN.match(mstr):
+            # Each match keeps its own exponent, e.g. both parts of a complex.
+            mstr = _EXP_PATTERN.sub(
+                lambda m: f"{m.group(1)}×10<sup>{int(m.group(2) + m.group(3))}</sup>",
+                mstr,
+            )
 
         return mstr
 

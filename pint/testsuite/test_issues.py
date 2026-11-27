@@ -1977,3 +1977,14 @@ def test_issue2535(func_registry):
 def test_issue2543_dot_multiplication(expr, expected):
     ureg = UnitRegistry()
     assert ureg.parse_units(expr) == ureg.parse_units(expected)
+
+
+def test_complex_magnitude_pretty_exponent_per_part():
+    # sub() used to build its replacement from the first match only, so the
+    # imaginary part of a complex magnitude got the real part's exponent.
+    ureg = UnitRegistry()
+    q = ureg.Quantity(1.5e20 + 2e-7j, "meter")
+
+    assert f"{q:.2e~P}" == "1.50×10²⁰+2.00×10⁻⁷j m"
+    assert f"{q:.2e~H}" == "1.50×10<sup>20</sup>+2.00×10<sup>-7</sup>j m"
+    assert f"{q:.2e~L}" == r"1.50\times 10^{20}+2.00\times 10^{-7}j\ \mathrm{m}"
