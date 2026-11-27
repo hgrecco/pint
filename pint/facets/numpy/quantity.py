@@ -377,8 +377,20 @@ class NumpyQuantity[MagnitudeT: Magnitude](PlainQuantity[MagnitudeT]):
         ):
             return self
 
+        if unit is None and self._get_non_multiplicative_units():
+            # Offset (non-multiplicative) units such as degree_Celsius cannot
+            # take an SI prefix, so return the quantity unchanged (mirrors
+            # the scalar PlainQuantity.to_compact guard, issue #2005).
+            return self
+
         SI_powers, SI_bases = _get_si_prefixes(self._REGISTRY)
         q_base, unit_str, unit_power = _get_compact_base(self, unit)
+
+        if q_base._get_non_multiplicative_units():
+            # The (explicit) compact target is an offset unit, e.g.
+            # to_compact(unit="degree_Fahrenheit"): return the converted
+            # quantity instead of attempting to attach an SI prefix.
+            return q_base
 
         magnitude = q_base.magnitude
         # Support uncertainties
