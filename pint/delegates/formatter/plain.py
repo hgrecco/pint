@@ -319,11 +319,16 @@ class PrettyFormatter(BaseFormatter):
             else:
                 mstr = format_number(magnitude)
 
-            m = _EXP_PATTERN.match(mstr)
-
-            if m:
-                exp = int(m.group(2) + m.group(3))
-                mstr = _EXP_PATTERN.sub(r"\1×10" + pretty_fmt_exponent(exp), mstr)
+            if _EXP_PATTERN.match(mstr):
+                # Each match keeps its own exponent, e.g. both parts of a complex.
+                mstr = _EXP_PATTERN.sub(
+                    lambda m: (
+                        m.group(1)
+                        + "×10"
+                        + pretty_fmt_exponent(int(m.group(2) + m.group(3)))
+                    ),
+                    mstr,
+                )
 
             return mstr
 
