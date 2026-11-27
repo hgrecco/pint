@@ -2074,3 +2074,41 @@ class TestToCompact:
     )
     def test_to_compact_no_finite_power(self, values):
         assert (values * self.ureg.m).to_compact().units == "meter"
+
+    def test_to_compact_offset_unit(self):
+        # Offset (non-multiplicative) units such as degree_Celsius cannot take
+        # an SI prefix, so to_compact must return the quantity unchanged
+        # instead of raising OffsetUnitCalculusError (issue #2584).
+        q = self.Q_(np.array([1000.0, 2000.0]), "degree_Celsius")
+        compact = q.to_compact()
+        assert compact.units == "degree_Celsius"
+        np.testing.assert_array_equal(compact.magnitude, [1000.0, 2000.0])
+        # Sub-unit magnitudes must not attempt millidegree_Celsius either.
+        q = self.Q_(np.array([0.001, 0.002]), "degree_Celsius")
+        compact = q.to_compact()
+        assert compact.units == "degree_Celsius"
+        np.testing.assert_array_equal(compact.magnitude, [0.001, 0.002])
+        # maximumPrefix must not attempt kilodegree_Celsius either.
+        q = self.Q_(np.array([10.0, 2000.0]), "degree_Celsius")
+        compact = q.to_compact(maximumPrefix=True)
+        assert compact.units == "degree_Celsius"
+        np.testing.assert_array_equal(compact.magnitude, [10.0, 2000.0])
+
+    def test_to_compact_offset_unit_explicit_target(self):
+        # An explicit offset target is converted but left unprefixed ...
+        q = self.Q_(np.array([1000.0, 2000.0]), "degree_Celsius")
+        compact = q.to_compact(unit="degree_Fahrenheit")
+        assert compact.units == "degree_Fahrenheit"
+        np.testing.assert_array_equal(compact.magnitude, [1832.0, 3632.0])
+        # ... while an explicit multiplicative target still compacts.
+        compact = q.to_compact(unit="kelvin")
+        assert compact.units == "kilokelvin"
+        np.testing.assert_array_almost_equal(compact.magnitude, [1.27315, 2.27315])
+
+    def test_to_compact_delta_offset_unit_still_compacts(self):
+        # delta_degree_Celsius is multiplicative, so compacting must still
+        # apply a prefix (no regression from the offset-unit guard).
+        q = self.Q_(np.array([0.001, 0.002]), "delta_degree_Celsius")
+        compact = q.to_compact()
+        assert compact.units == "millidelta_degree_Celsius"
+        np.testing.assert_array_equal(compact.magnitude, [1.0, 2.0])
