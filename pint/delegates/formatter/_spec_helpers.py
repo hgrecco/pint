@@ -30,6 +30,15 @@ _BASIC_TYPES = frozenset("bcdeEfFgGnosxX%uS")
 
 REGISTERED_FORMATTERS: dict[str, Any] = {}
 
+# "^" is the flag for negative exponents, unless it is followed by a field width
+# (as in "^30" or "*^30"), where it is Python's centre alignment.
+_NEGATIVE_EXPONENTS_FLAG_RE = re.compile(r"\^(?![-+ ]?\d)")
+
+
+def has_negative_exponents_flag(spec: str) -> bool:
+    """Return whether a format specification asks for negative exponents."""
+    return _NEGATIVE_EXPONENTS_FLAG_RE.search(spec) is not None
+
 
 def parse_spec(spec: str) -> str:
     """Parse and return spec.
@@ -83,12 +92,11 @@ def remove_custom_flags(spec: str) -> str:
 
     for flag in sorted(REGISTERED_FORMATTERS.keys(), key=len, reverse=True) + [
         "~",
-        "^",
         "/",
     ]:
         if flag:
             spec = spec.replace(flag, "")
-    return spec
+    return _NEGATIVE_EXPONENTS_FLAG_RE.sub("", spec)
 
 
 # Regex for the Python format specification mini-language:

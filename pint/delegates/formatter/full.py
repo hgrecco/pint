@@ -19,6 +19,7 @@ from ..._typing import Magnitude
 from ...compat import Unpack, babel_parse
 from ...util import iterable
 from ._compound_unit_helpers import BabelKwds
+from ._spec_helpers import has_negative_exponents_flag
 from ._to_register import REGISTERED_FORMATTERS
 from .html import HTMLFormatter
 from .latex import LatexFormatter, SIunitxFormatter
@@ -183,7 +184,7 @@ class FullFormatter(BaseFormatter):
             use_plural=use_plural,
             length=babel_kwds.get("length", None),
             locale=locale,
-            as_ratio=False if "^" in spec else True,
+            as_ratio=not has_negative_exponents_flag(spec),
         )
 
     def format_measurement(

@@ -101,6 +101,14 @@ Pint uses the :ref:`format specifications <formatspec>`. However, it is importan
 that only the  type honors the locale. Using any other numeric format (e.g. `g`, `e`, `f`)
 will result  in a non-localized representation of the number.
 
+A width, fill and alignment apply to the whole quantity. A ``^`` directly followed
+by a width is centre alignment, not the ``^`` unit modifier:
+
+.. doctest::
+
+   >>> f"{3.5 * ureg.m:*^14~P}"
+   '****3.5 m*****'
+
 
 Ordering units
 --------------
